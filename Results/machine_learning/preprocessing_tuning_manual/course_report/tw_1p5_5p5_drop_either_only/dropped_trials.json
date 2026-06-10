@@ -1,0 +1,71 @@
+[
+  {
+    "subject_id": 1,
+    "source_file": "sub_01_MI.mat",
+    "dropped_trial_indices_zero_based": [],
+    "dropped_count": 0,
+    "remaining_sample_count": 120
+  },
+  {
+    "subject_id": 2,
+    "source_file": "sub_02_MI.mat",
+    "dropped_trial_indices_zero_based": [
+      23,
+      25,
+      34,
+      51,
+      72,
+      82,
+      85,
+      90,
+      94
+    ],
+    "dropped_count": 9,
+    "remaining_sample_count": 111
+  },
+  {
+    "subject_id": 3,
+    "source_file": "sub_03_MI.mat",
+    "dropped_trial_indices_zero_based": [
+      15,
+      19,
+      112
+    ],
+    "dropped_count": 3,
+    "remaining_sample_count": 117
+  },
+  {
+    "subject_id": 4,
+    "source_file": "sub_04_MI.mat",
+    "dropped_trial_indices_zero_based": [
+      65,
+      94,
+      95
+    ],
+    "dropped_count": 3,
+    "remaining_sample_count": 117
+  },
+  {
+    "subject_id": 5,
+    "source_file": "sub_05_MI.mat",
+    "dropped_trial_indices_zero_based": [
+      0,
+      6,
+      30,
+      49,
+      87,
+      94,
+      116,
+      119
+    ],
+    "dropped_count": 8,
+    "remaining_sample_count": 112
+  },
+  {
+    "subject_id": 6,
+    "source_file": "sub_06_MI.mat",
+    "dropped_trial_indices_zero_based": [],
+    "dropped_count": 0,
+    "remaining_sample_count": 120
+  }
+]

@@ -11,6 +11,7 @@ Scr/           Python 源代码
 Results/       实验指标、日志、表格和结果图片
 AGENTS.md      项目协作规范
 README.md      项目说明和代码文件说明
+PREPROCESSING_README.md  预处理方法、改进尝试与效果分析
 requirements.txt Python 依赖版本
 数据说明.txt   课程数据说明
 ```
@@ -60,7 +61,8 @@ python -m pip install -r requirements.txt
 | 文件 | 功能 |
 |---|---|
 | `Scr/data_loader.py` | 读取单个被试 `.mat` 文件，检查 `eeg` 变量和 4 维形状，截取前 30 个通道；将 `classes x channels x time_points x trials` 转换为机器学习使用的 `X, y`，其中 `X` 为 `samples x channels x time_points`，`y` 为类别标签。 |
-| `Scr/preprocessing.py` | 提供 EEG 预处理函数：输入校验、逐 trial 逐通道去均值、Butterworth 零相位带通滤波、可选时间窗截取，以及统一入口 `preprocess_eeg()`。输入输出主形状为 `samples x channels x time_points`。 |
+| `Scr/preprocessing.py` | 提供 EEG 预处理函数：输入校验、逐 trial 逐通道去均值、可选 CAR 共均值重参考、可选 50 Hz 陷波、Butterworth 零相位带通滤波、可选时间窗截取、可选单 trial-单通道 z-score 归一化，以及 trial 质量诊断摘要。输入输出主形状为 `samples x channels x time_points`。 |
+| `Scr/preprocessing_experiments.py` | 预处理消融实验入口。批量比较不同时间窗和是否剔除异常 trial 对分类结果的影响，并将每组实验的汇总指标与每任务最佳模型写入独立结果目录。 |
 | `Scr/feature_extraction.py` | 提取基础时域和频域特征。时域特征包括均值、标准差、方差、RMS、峰峰值、平均绝对值、偏度、峰度、波形长度和过零率；频域特征基于 Welch PSD，计算 alpha/beta 频带绝对功率、相对功率、谱质心和归一化谱熵。统一入口 `extract_basic_features()` 输出二维特征矩阵、特征名和可保存配置。 |
 | `Scr/machine_learning_config.py` | 集中保存实验配置：随机种子、采样率、通道数、类别名称、2/4/6 分类任务、预处理参数、特征参数、分类器列表和验证策略名称。 |
 | `Scr/classifiers.py` | 创建 LDA、SVM、逻辑回归、KNN 和随机森林分类器。需要标准化的模型使用 `StandardScaler + classifier` 的 `Pipeline`，保证标准化只在每个训练折内部拟合；随机森林使用 passthrough scaler。 |
@@ -76,6 +78,12 @@ python -m pip install -r requirements.txt
 python Scr\machine_learning_process.py
 ```
 
+运行预处理消融实验：
+
+```powershell
+python Scr\preprocessing_experiments.py
+```
+
 运行前请确认：
 
 1. `Data/` 中存在 `sub_01_MI.mat` 到 `sub_06_MI.mat` 六个文件。
@@ -89,7 +97,7 @@ python Scr\machine_learning_process.py
 |---|---|
 | 通道 | 前 30 个通道 |
 | 采样率 | 500 Hz |
-| 预处理 | 去均值，8-30 Hz Butterworth 零相位带通滤波，时间窗 `(1.5, 5.5)` 秒 |
+| 预处理 | 去均值，支持可选 CAR 共均值重参考，50 Hz 陷波，8-30 Hz Butterworth 零相位带通滤波，单 trial-单通道 z-score 归一化，时间窗 `(1.5, 5.5)` 秒；预处理效果分析见 `PREPROCESSING_README.md` |
 | 特征 | Welch PSD 频域特征 + 时域统计特征 |
 | 任务 | `2class`、`4class`、`6class` |
 | 分类器 | LDA、SVM、逻辑回归、KNN、随机森林 |
@@ -107,12 +115,24 @@ Results/machine_learning/course_report/course_report_日期_时间/
 |---|---|
 | `experiment_config.json` | 本次实验参数、分类器参数、验证策略和数据泄漏控制说明 |
 | `feature_names.json` | 特征列名称 |
+| `trial_quality_summary.json` | 每个被试预处理后 trial RMS 与峰峰值的稳健异常标记摘要，仅做诊断不自动删样本 |
+| `dropped_trials.json` | 根据当前异常 trial 剔除配置生成的剔除索引与剩余样本数；默认配置下仅记录空剔除结果 |
 | `fold_metrics.csv` | 每个任务、分类器和验证折的指标 |
 | `summary_metrics.csv` | 每个任务和分类器的汇总指标 |
 | `complete_results.json` | 完整折内记录、折外预测、每类指标和混淆矩阵 |
 | `figures/` | 模型对比图、折间 balanced accuracy 图、计数和归一化混淆矩阵 |
 | `report.md` | 自动生成的 Markdown 实验报告 |
 
+预处理消融实验会额外生成：
+
+| 文件 | 内容 |
+|---|---|
+| `Results/machine_learning/preprocessing_tuning/.../experiment_manifest.json` | 每组实验的预处理配置、结果目录和异常 trial 剔除数量 |
+| `Results/machine_learning/preprocessing_tuning/.../all_summary_metrics.csv` | 各组实验下所有任务与分类器的汇总指标 |
+| `Results/machine_learning/preprocessing_tuning/.../best_by_task.csv` | 每组实验在 2/4/6 分类任务上的最佳模型和指标 |
+
 ## 数据泄漏控制
 
-当前基础特征按单个 trial 独立计算，不拟合跨样本统计量。`StandardScaler` 和分类器都放在 scikit-learn `Pipeline` 中，并在每个交叉验证训练折内拟合，测试折不参与标准化器或分类器训练。后续若加入 CSP、PCA 或特征选择，也必须放入交叉验证训练折内部拟合。
+当前基础特征按单个 trial 独立计算，不拟合跨样本统计量。预处理中的单 trial-单通道 z-score 只使用该 trial 自身的时间轴统计量，不使用其他样本信息。`StandardScaler` 和分类器都放在 scikit-learn `Pipeline` 中，并在每个交叉验证训练折内拟合，测试折不参与标准化器或分类器训练。后续若加入 CSP、PCA 或特征选择，也必须放入交叉验证训练折内部拟合。
+
+当前没有在默认流程中启用重叠滑动窗口增强。原因是若直接将同一原始 trial 切成多个高度重叠片段，再沿用现有被试内 5 折划分，容易让同源片段同时出现在训练折和测试折，导致结果偏乐观。若后续需要引入滑窗增强，必须同步重构数据分组与交叉验证策略，以 trial 为分组单位避免泄漏。

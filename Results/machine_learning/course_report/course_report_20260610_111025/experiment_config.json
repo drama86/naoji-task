@@ -1,0 +1,245 @@
+{
+  "random_seed": 42,
+  "subject_count": 6,
+  "sampling_rate_hz": 500,
+  "channel_count": 30,
+  "preprocessing": {
+    "low_cut_hz": 8.0,
+    "high_cut_hz": 30.0,
+    "filter_order": 4,
+    "spatial_reference": "car",
+    "notch_hz": 50.0,
+    "notch_quality_factor": 30.0,
+    "time_window_seconds": [
+      1.5,
+      5.5
+    ],
+    "time_window_note": "The dataset documentation does not provide cue timing. The selected time window is an experimental choice.",
+    "normalize_mode": "zscore_per_trial_channel",
+    "trial_quality_robust_z_threshold": 3.5,
+    "drop_flagged_trials": false,
+    "drop_flagged_trials_rule": "either"
+  },
+  "feature_extraction": {
+    "feature_sets": [
+      "frequency",
+      "time"
+    ],
+    "input_shape": [
+      120,
+      30,
+      2000
+    ],
+    "output_shape": [
+      120,
+      480
+    ],
+    "feature_order": "feature_type_then_channel_number",
+    "time_features": [
+      "mean",
+      "standard_deviation",
+      "variance",
+      "root_mean_square",
+      "peak_to_peak",
+      "mean_absolute_value",
+      "skewness",
+      "kurtosis",
+      "waveform_length",
+      "zero_crossing_rate"
+    ],
+    "frequency": {
+      "method": "Welch PSD",
+      "sampling_rate_hz": 500,
+      "nperseg": 500,
+      "noverlap": 250,
+      "bands_hz": [
+        {
+          "name": "alpha",
+          "low": 8.0,
+          "high": 13.0
+        },
+        {
+          "name": "beta",
+          "low": 13.0,
+          "high": 30.0
+        }
+      ],
+      "total_power_band_hz": [
+        8.0,
+        30.0
+      ],
+      "features_per_channel": [
+        "absolute_band_power",
+        "relative_band_power",
+        "spectral_centroid",
+        "normalized_spectral_entropy"
+      ]
+    },
+    "uses_dataset_statistics": false,
+    "standardization_note": "Feature standardization must be fitted inside each training fold."
+  },
+  "feature_count": 480,
+  "tasks": [
+    "2class",
+    "4class",
+    "6class"
+  ],
+  "classifiers": [
+    "lda",
+    "svm",
+    "logistic_regression",
+    "knn",
+    "random_forest"
+  ],
+  "classifier_display_names": {
+    "lda": "LDA",
+    "svm": "SVM",
+    "logistic_regression": "Logistic Regression",
+    "knn": "KNN",
+    "random_forest": "Random Forest"
+  },
+  "classifier_parameters": {
+    "lda": {
+      "pipeline_steps": [
+        "scaler",
+        "classifier"
+      ],
+      "scaler": "StandardScaler",
+      "classifier_class": "LinearDiscriminantAnalysis",
+      "classifier_parameters": {
+        "covariance_estimator": null,
+        "n_components": null,
+        "priors": null,
+        "shrinkage": "auto",
+        "solver": "lsqr",
+        "store_covariance": false,
+        "tol": 0.0001
+      },
+      "pipeline_parameters": {
+        "memory": null,
+        "transform_input": null,
+        "verbose": false
+      }
+    },
+    "svm": {
+      "pipeline_steps": [
+        "scaler",
+        "classifier"
+      ],
+      "scaler": "StandardScaler",
+      "classifier_class": "SVC",
+      "classifier_parameters": {
+        "C": 10,
+        "break_ties": false,
+        "cache_size": 200,
+        "class_weight": "balanced",
+        "coef0": 0.0,
+        "decision_function_shape": "ovr",
+        "degree": 3,
+        "gamma": "scale",
+        "kernel": "rbf",
+        "max_iter": -1,
+        "probability": false,
+        "random_state": null,
+        "shrinking": true,
+        "tol": 0.001,
+        "verbose": false
+      },
+      "pipeline_parameters": {
+        "memory": null,
+        "transform_input": null,
+        "verbose": false
+      }
+    },
+    "logistic_regression": {
+      "pipeline_steps": [
+        "scaler",
+        "classifier"
+      ],
+      "scaler": "StandardScaler",
+      "classifier_class": "LogisticRegression",
+      "classifier_parameters": {
+        "C": 0.1,
+        "class_weight": "balanced",
+        "dual": false,
+        "fit_intercept": true,
+        "intercept_scaling": 1,
+        "l1_ratio": null,
+        "max_iter": 2000,
+        "multi_class": "deprecated",
+        "n_jobs": null,
+        "penalty": "l2",
+        "random_state": 42,
+        "solver": "lbfgs",
+        "tol": 0.0001,
+        "verbose": 0,
+        "warm_start": false
+      },
+      "pipeline_parameters": {
+        "memory": null,
+        "transform_input": null,
+        "verbose": false
+      }
+    },
+    "knn": {
+      "pipeline_steps": [
+        "scaler",
+        "classifier"
+      ],
+      "scaler": "StandardScaler",
+      "classifier_class": "KNeighborsClassifier",
+      "classifier_parameters": {
+        "algorithm": "auto",
+        "leaf_size": 30,
+        "metric": "minkowski",
+        "metric_params": null,
+        "n_jobs": null,
+        "n_neighbors": 5,
+        "p": 2,
+        "weights": "distance"
+      },
+      "pipeline_parameters": {
+        "memory": null,
+        "transform_input": null,
+        "verbose": false
+      }
+    },
+    "random_forest": {
+      "pipeline_steps": [
+        "scaler",
+        "classifier"
+      ],
+      "scaler": "passthrough",
+      "classifier_class": "RandomForestClassifier",
+      "classifier_parameters": {
+        "bootstrap": true,
+        "ccp_alpha": 0.0,
+        "class_weight": "balanced",
+        "criterion": "gini",
+        "max_depth": null,
+        "max_features": "sqrt",
+        "max_leaf_nodes": null,
+        "max_samples": null,
+        "min_impurity_decrease": 0.0,
+        "min_samples_leaf": 1,
+        "min_samples_split": 2,
+        "min_weight_fraction_leaf": 0.0,
+        "monotonic_cst": null,
+        "n_estimators": 500,
+        "n_jobs": null,
+        "oob_score": false,
+        "random_state": 42,
+        "verbose": 0,
+        "warm_start": false
+      },
+      "pipeline_parameters": {
+        "memory": null,
+        "transform_input": null,
+        "verbose": false
+      }
+    }
+  },
+  "validation_strategy": "within_subject_5fold",
+  "validation_strategy_display": "Per-subject Stratified 5-Fold",
+  "leakage_control": "Per-trial features use no cross-sample fitted statistics. StandardScaler and classifier are fitted inside each training fold."
+}

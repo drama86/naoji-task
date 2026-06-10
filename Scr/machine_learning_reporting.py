@@ -220,9 +220,25 @@ def write_markdown_report(
         f"- 使用通道：前 {experiment_config['channel_count']} 个通道",
         (
             "- 预处理：逐 trial、逐通道去均值，"
+            f"{experiment_config['preprocessing']['notch_hz']:g} Hz 陷波，"
             f"{experiment_config['preprocessing']['low_cut_hz']:g}–"
             f"{experiment_config['preprocessing']['high_cut_hz']:g} Hz "
             "Butterworth 零相位带通滤波"
+            if experiment_config["preprocessing"]["notch_hz"] is not None
+            else (
+                "- 预处理：逐 trial、逐通道去均值，"
+                f"{experiment_config['preprocessing']['low_cut_hz']:g}–"
+                f"{experiment_config['preprocessing']['high_cut_hz']:g} Hz "
+                "Butterworth 零相位带通滤波"
+            )
+        ),
+        (
+            "- 信号归一化：关闭"
+            if experiment_config["preprocessing"]["normalize_mode"] is None
+            else (
+                "- 信号归一化："
+                f"{experiment_config['preprocessing']['normalize_mode']}"
+            )
         ),
         (
             "- 时间窗：完整 0–10 s"
@@ -318,4 +334,3 @@ def write_markdown_report(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text("\n".join(lines), encoding="utf-8")
     return output_path
-

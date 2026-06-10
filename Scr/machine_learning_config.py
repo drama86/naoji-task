@@ -45,13 +45,27 @@ PREPROCESSING_CONFIG = {
     # Butterworth 滤波器阶数：越大过渡带越陡，但也可能增强边缘效应。
     # 建议先比较 2、4、6 阶，当前使用较常见的 4 阶。
     "filter_order": 4,
+    # 空间重参考：None 或 "car"（common average reference）。
+    "spatial_reference": "car",
+    # 50 Hz 工频陷波中心频率；None 表示关闭陷波。
+    "notch_hz": 50.0,
+    # 陷波品质因数：越大带宽越窄，通常 20-35 是较常见起点。
+    "notch_quality_factor": 30.0,
     # 时间窗（秒）：None 表示使用完整 0-10 s。
     # 可改为 (1.0, 5.0) 或 (2.0, 6.0) 做实验，但数据说明未给出提示时刻。
     "time_window_seconds": (1.5, 5.5),
     "time_window_note": (
         "The dataset documentation does not provide cue timing. "
-        "The full 0-10 s trial is used by default."
+        "The selected time window is an experimental choice."
     ),
+    # 信号级归一化：None 或 "zscore_per_trial_channel"。
+    "normalize_mode": "zscore_per_trial_channel",
+    # 只做异常 trial 标记，不在当前阶段自动剔除样本。
+    "trial_quality_robust_z_threshold": 3.5,
+    # 是否按稳健异常标记剔除 trial；当前默认关闭，仅保存诊断。
+    "drop_flagged_trials": False,
+    # 剔除时的合并规则："peak_to_peak"、"rms" 或 "either"。
+    "drop_flagged_trials_rule": "either",
 }
 
 FEATURE_CONFIG = {

@@ -36,14 +36,14 @@ from machine_learning_reporting import (
     write_markdown_report,
 )
 from model_evaluation import evaluate_classifiers
-from preprocessing import preprocess_eeg
+from preprocessing import preprocess_eeg, summarize_trial_quality
 
 
 def parse_args():
     """Return fixed parameters suitable for direct VS Code F5 debugging.
 
     Edit values in this function to switch tasks, classifiers, or validation.
-    The default runs 2-, 4-, and 6-class LOSO experiments in that order.
+    The default runs 2-, 4-, and 6-class within-subject 5-fold experiments.
     """
     project_root = Path(__file__).resolve().parents[1]
     return argparse.Namespace(
@@ -86,6 +86,8 @@ def load_preprocessed_features(data_dir):
     subject_blocks = []
     reference_names = None
     reference_config = None
+    subject_quality_summaries = []
+    dropped_trial_summary = []
 
     for subject_file in subject_files:
         subject_id = int(subject_file.stem.split("_")[1])
@@ -97,7 +99,63 @@ def load_preprocessed_features(data_dir):
             high_cut=PREPROCESSING_CONFIG["high_cut_hz"],
             filter_order=PREPROCESSING_CONFIG["filter_order"],
             time_window=PREPROCESSING_CONFIG["time_window_seconds"],
+            notch_hz=PREPROCESSING_CONFIG["notch_hz"],
+            notch_quality_factor=PREPROCESSING_CONFIG["notch_quality_factor"],
+            spatial_reference=PREPROCESSING_CONFIG["spatial_reference"],
+            normalize_mode=PREPROCESSING_CONFIG["normalize_mode"],
         )
+        quality_summary = summarize_trial_quality(
+            X_processed,
+            robust_z_threshold=PREPROCESSING_CONFIG[
+                "trial_quality_robust_z_threshold"
+            ],
+        )
+        quality_summary.update(
+            {
+                "subject_id": subject_id,
+                "source_file": subject_file.name,
+            }
+        )
+        subject_quality_summaries.append(quality_summary)
+
+        if PREPROCESSING_CONFIG["drop_flagged_trials"]:
+            flagged_rms = set(
+                quality_summary["trial_rms"]["flagged_trial_indices_zero_based"]
+            )
+            flagged_peak_to_peak = set(
+                quality_summary["trial_peak_to_peak"][
+                    "flagged_trial_indices_zero_based"
+                ]
+            )
+            rule = PREPROCESSING_CONFIG["drop_flagged_trials_rule"]
+            if rule == "rms":
+                dropped_indices = sorted(flagged_rms)
+            elif rule == "peak_to_peak":
+                dropped_indices = sorted(flagged_peak_to_peak)
+            elif rule == "either":
+                dropped_indices = sorted(flagged_rms | flagged_peak_to_peak)
+            else:
+                raise ValueError(
+                    "drop_flagged_trials_rule must be 'peak_to_peak', "
+                    "'rms', or 'either'"
+                )
+            keep_mask = np.ones(X_processed.shape[0], dtype=bool)
+            keep_mask[dropped_indices] = False
+            X_processed = X_processed[keep_mask]
+            y = y[keep_mask]
+        else:
+            dropped_indices = []
+
+        dropped_trial_summary.append(
+            {
+                "subject_id": subject_id,
+                "source_file": subject_file.name,
+                "dropped_trial_indices_zero_based": dropped_indices,
+                "dropped_count": len(dropped_indices),
+                "remaining_sample_count": int(y.shape[0]),
+            }
+        )
+
         features, feature_names, feature_config = extract_basic_features(
             X_processed,
             feature_sets=FEATURE_CONFIG["feature_sets"],
@@ -128,6 +186,8 @@ def load_preprocessed_features(data_dir):
         np.concatenate(subject_blocks, axis=0),
         reference_names,
         reference_config,
+        subject_quality_summaries,
+        dropped_trial_summary,
     )
 
 
@@ -192,9 +252,15 @@ def run_experiment(args):
     figures_dir = run_dir / "figures"
     print(f"实验输出目录：{run_dir}")
     print("阶段 1/4：读取、预处理并提取全部被试特征")
-    features, y, subject_ids, feature_names, feature_config = (
-        load_preprocessed_features(args.data_dir)
-    )
+    (
+        features,
+        y,
+        subject_ids,
+        feature_names,
+        feature_config,
+        trial_quality_summary,
+        dropped_trial_summary,
+    ) = load_preprocessed_features(args.data_dir)
 
     experiment_config = {
         "random_seed": RANDOM_SEED,
@@ -225,6 +291,8 @@ def run_experiment(args):
     }
     write_json(run_dir / "experiment_config.json", experiment_config)
     write_json(run_dir / "feature_names.json", feature_names)
+    write_json(run_dir / "trial_quality_summary.json", trial_quality_summary)
+    write_json(run_dir / "dropped_trials.json", dropped_trial_summary)
 
     all_fold_records = []
     all_summary_records = []

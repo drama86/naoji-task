@@ -1,0 +1,344 @@
+{
+  "subject_count": 6,
+  "total_sample_count": 720,
+  "class_index": 0,
+  "trial_number": 1,
+  "plotted_channels": [
+    1,
+    15,
+    30
+  ],
+  "sampling_rate_hz": 500,
+  "bandpass_hz": [
+    8.0,
+    30.0
+  ],
+  "filter_order": 4,
+  "time_window_seconds": null,
+  "subjects": [
+    {
+      "source_file": "sub_01_MI.mat",
+      "subject_id": 1,
+      "before": {
+        "X_shape": [
+          120,
+          30,
+          5000
+        ],
+        "y_shape": [
+          120
+        ],
+        "data_type": "float64",
+        "all_values_finite": true,
+        "class_counts": {
+          "0": 20,
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "4": 20,
+          "5": 20
+        },
+        "minimum": -48491.79171405393,
+        "maximum": 238.120957586982,
+        "mean": -15792.48381369283,
+        "standard_deviation": 10502.462425563603
+      },
+      "after": {
+        "X_shape": [
+          120,
+          30,
+          5000
+        ],
+        "y_shape": [
+          120
+        ],
+        "data_type": "float64",
+        "all_values_finite": true,
+        "class_counts": {
+          "0": 20,
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "4": 20,
+          "5": 20
+        },
+        "minimum": -528.3459013840057,
+        "maximum": 555.8840452915376,
+        "mean": -0.00031967015365621105,
+        "standard_deviation": 7.917835440864826
+      },
+      "before_figure": "sub_01_class_0_trial_01_before.png",
+      "after_figure": "sub_01_class_0_trial_01_after.png"
+    },
+    {
+      "source_file": "sub_02_MI.mat",
+      "subject_id": 2,
+      "before": {
+        "X_shape": [
+          120,
+          30,
+          5000
+        ],
+        "y_shape": [
+          120
+        ],
+        "data_type": "float64",
+        "all_values_finite": true,
+        "class_counts": {
+          "0": 20,
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "4": 20,
+          "5": 20
+        },
+        "minimum": -27207.517845738315,
+        "maximum": 326.02598891564827,
+        "mean": -16071.062942202067,
+        "standard_deviation": 5398.390416522378
+      },
+      "after": {
+        "X_shape": [
+          120,
+          30,
+          5000
+        ],
+        "y_shape": [
+          120
+        ],
+        "data_type": "float64",
+        "all_values_finite": true,
+        "class_counts": {
+          "0": 20,
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "4": 20,
+          "5": 20
+        },
+        "minimum": -439.482694944934,
+        "maximum": 521.0230579777736,
+        "mean": -0.0006969692465225443,
+        "standard_deviation": 4.057172676077185
+      },
+      "before_figure": "sub_02_class_0_trial_01_before.png",
+      "after_figure": "sub_02_class_0_trial_01_after.png"
+    },
+    {
+      "source_file": "sub_03_MI.mat",
+      "subject_id": 3,
+      "before": {
+        "X_shape": [
+          120,
+          30,
+          5000
+        ],
+        "y_shape": [
+          120
+        ],
+        "data_type": "float64",
+        "all_values_finite": true,
+        "class_counts": {
+          "0": 20,
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "4": 20,
+          "5": 20
+        },
+        "minimum": -38220.64697822692,
+        "maximum": 15934.417395009212,
+        "mean": -12790.504953433505,
+        "standard_deviation": 8347.396902074435
+      },
+      "after": {
+        "X_shape": [
+          120,
+          30,
+          5000
+        ],
+        "y_shape": [
+          120
+        ],
+        "data_type": "float64",
+        "all_values_finite": true,
+        "class_counts": {
+          "0": 20,
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "4": 20,
+          "5": 20
+        },
+        "minimum": -208.07178115102292,
+        "maximum": 280.5017133342609,
+        "mean": -9.352182888566602e-05,
+        "standard_deviation": 3.563200584073163
+      },
+      "before_figure": "sub_03_class_0_trial_01_before.png",
+      "after_figure": "sub_03_class_0_trial_01_after.png"
+    },
+    {
+      "source_file": "sub_04_MI.mat",
+      "subject_id": 4,
+      "before": {
+        "X_shape": [
+          120,
+          30,
+          5000
+        ],
+        "y_shape": [
+          120
+        ],
+        "data_type": "float64",
+        "all_values_finite": true,
+        "class_counts": {
+          "0": 20,
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "4": 20,
+          "5": 20
+        },
+        "minimum": -43175.00214758894,
+        "maximum": 11313.015336983053,
+        "mean": -7349.293083002192,
+        "standard_deviation": 7903.615311327023
+      },
+      "after": {
+        "X_shape": [
+          120,
+          30,
+          5000
+        ],
+        "y_shape": [
+          120
+        ],
+        "data_type": "float64",
+        "all_values_finite": true,
+        "class_counts": {
+          "0": 20,
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "4": 20,
+          "5": 20
+        },
+        "minimum": -66.77639945201,
+        "maximum": 100.66684887488391,
+        "mean": 0.00030572195420982314,
+        "standard_deviation": 2.8021047659769436
+      },
+      "before_figure": "sub_04_class_0_trial_01_before.png",
+      "after_figure": "sub_04_class_0_trial_01_after.png"
+    },
+    {
+      "source_file": "sub_05_MI.mat",
+      "subject_id": 5,
+      "before": {
+        "X_shape": [
+          120,
+          30,
+          5000
+        ],
+        "y_shape": [
+          120
+        ],
+        "data_type": "float64",
+        "all_values_finite": true,
+        "class_counts": {
+          "0": 20,
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "4": 20,
+          "5": 20
+        },
+        "minimum": -27176.69157659185,
+        "maximum": 11029.482461904507,
+        "mean": -9333.658692754878,
+        "standard_deviation": 6474.06021389645
+      },
+      "after": {
+        "X_shape": [
+          120,
+          30,
+          5000
+        ],
+        "y_shape": [
+          120
+        ],
+        "data_type": "float64",
+        "all_values_finite": true,
+        "class_counts": {
+          "0": 20,
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "4": 20,
+          "5": 20
+        },
+        "minimum": -7040.67722555192,
+        "maximum": 7025.680019875152,
+        "mean": -0.00040657183400573307,
+        "standard_deviation": 20.294306492705182
+      },
+      "before_figure": "sub_05_class_0_trial_01_before.png",
+      "after_figure": "sub_05_class_0_trial_01_after.png"
+    },
+    {
+      "source_file": "sub_06_MI.mat",
+      "subject_id": 6,
+      "before": {
+        "X_shape": [
+          120,
+          30,
+          5000
+        ],
+        "y_shape": [
+          120
+        ],
+        "data_type": "float64",
+        "all_values_finite": true,
+        "class_counts": {
+          "0": 20,
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "4": 20,
+          "5": 20
+        },
+        "minimum": -11907.70651980819,
+        "maximum": 20754.943541525183,
+        "mean": 2687.209470649584,
+        "standard_deviation": 6784.128753346319
+      },
+      "after": {
+        "X_shape": [
+          120,
+          30,
+          5000
+        ],
+        "y_shape": [
+          120
+        ],
+        "data_type": "float64",
+        "all_values_finite": true,
+        "class_counts": {
+          "0": 20,
+          "1": 20,
+          "2": 20,
+          "3": 20,
+          "4": 20,
+          "5": 20
+        },
+        "minimum": -57.03483207992501,
+        "maximum": 55.55864510195215,
+        "mean": 0.001073326635495359,
+        "standard_deviation": 4.209279365610951
+      },
+      "before_figure": "sub_06_class_0_trial_01_before.png",
+      "after_figure": "sub_06_class_0_trial_01_after.png"
+    }
+  ]
+}

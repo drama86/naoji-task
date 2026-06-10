@@ -1,0 +1,40 @@
+{
+  "sampling_rate_hz": 500,
+  "selected_channels": {
+    "first_channel": 1,
+    "last_channel": 30,
+    "count": 30
+  },
+  "preprocessing_order": [
+    "remove_trial_channel_mean",
+    "butterworth_zero_phase_bandpass",
+    "optional_time_window_crop"
+  ],
+  "bandpass": {
+    "low_cut_hz": 8.0,
+    "high_cut_hz": 30.0,
+    "filter_order": 4,
+    "representation": "second-order sections",
+    "zero_phase": true
+  },
+  "time_window_seconds": null,
+  "time_window_note": "The dataset documentation does not provide cue timing. The selected time window is an experimental choice.",
+  "visualized_sample": {
+    "subject_id": 1,
+    "source_file": "sub_01_MI.mat",
+    "class_index": 0,
+    "trial_number": 1,
+    "channel_number": 1
+  },
+  "input_shape": [
+    1,
+    30,
+    5000
+  ],
+  "output_shape": [
+    1,
+    30,
+    5000
+  ],
+  "figure_file": "sub_01_class_0_trial_01_channel_01_before_after.png"
+}

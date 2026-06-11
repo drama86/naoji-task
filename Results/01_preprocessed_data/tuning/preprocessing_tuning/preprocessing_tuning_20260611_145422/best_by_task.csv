@@ -1,0 +1,4 @@
+﻿experiment,description,task,best_classifier,balanced_accuracy,macro_f1,dropped_trial_count,time_window_seconds,drop_flagged_trials,spatial_reference
+tw_1p5_5p5_keep,1.5-5.5 s，不剔除异常 trial,2class,logistic_regression,0.6291666666666667,0.6286444479215563,0,"(1.5, 5.5)",False,None
+tw_1p5_5p5_keep,1.5-5.5 s，不剔除异常 trial,4class,random_forest,0.3458333333333333,0.3457306111967129,0,"(1.5, 5.5)",False,None
+tw_1p5_5p5_keep,1.5-5.5 s，不剔除异常 trial,6class,lda,0.2638888888888889,0.2651406198087019,0,"(1.5, 5.5)",False,None

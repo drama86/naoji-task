@@ -1,0 +1,23 @@
+{
+  "2class": {
+    "accuracy": 0.5375,
+    "balanced_accuracy": 0.5375,
+    "macro_precision": 0.5375026043475242,
+    "macro_recall": 0.5375,
+    "macro_f1": 0.5374919703467074
+  },
+  "4class": {
+    "accuracy": 0.3,
+    "balanced_accuracy": 0.3,
+    "macro_precision": 0.30097027338095705,
+    "macro_recall": 0.3,
+    "macro_f1": 0.29546703505485317
+  },
+  "6class": {
+    "accuracy": 0.2652777777777778,
+    "balanced_accuracy": 0.2652777777777778,
+    "macro_precision": 0.267664601380673,
+    "macro_recall": 0.2652777777777778,
+    "macro_f1": 0.26351601351012016
+  }
+}

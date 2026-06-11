@@ -46,7 +46,8 @@ PREPROCESSING_CONFIG = {
     # 建议先比较 2、4、6 阶，当前使用较常见的 4 阶。
     "filter_order": 4,
     # 空间重参考：None 或 "car"（common average reference）。
-    "spatial_reference": "car",
+    # 当前综合实验更推荐不启用 CAR，作为默认主线。
+    "spatial_reference": None,
     # 50 Hz 工频陷波中心频率；None 表示关闭陷波。
     "notch_hz": 50.0,
     # 陷波品质因数：越大带宽越窄，通常 20-35 是较常见起点。
@@ -69,24 +70,60 @@ PREPROCESSING_CONFIG = {
 }
 
 FEATURE_CONFIG = {
-    # 特征集合：可使用 ("time",)、("frequency",) 或二者组合。
-    # 组合顺序同时决定输出特征列的排列顺序。
-    "feature_sets": ("frequency", "time"),
-    # Welch PSD 频带定义：(名称, 下边界Hz, 上边界Hz)。
-    # 可以继续细分频带，但频带必须位于 0-250 Hz 内。
-    "frequency_bands": (
-        ("alpha", 8.0, 13.0),
-        ("beta", 13.0, 30.0),
-    ),
-    # 相对功率、谱质心和谱熵使用的总频率范围。
-    # 应覆盖 frequency_bands 中希望比较的全部频带。
-    "total_power_band": (8.0, 30.0),
-    # Welch 每段采样点数：500 点在 500 Hz 下对应 1 秒。
-    # 值越大频率分辨率越高，但可平均的分段数量越少。
-    "nperseg": 500,
-    # Welch 相邻分段重叠点数：250 表示 50% 重叠。
-    # 必须满足 0 <= noverlap < nperseg。
-    "noverlap": 250,
+    # 可选模式："basic"、"csp"、"fbcsp"。
+    # basic：当前基础时域 + PSD 特征。
+    # csp / fbcsp：需在每个训练折内部拟合，避免数据泄漏。
+    "mode": "basic",
+    "basic": {
+        # 特征集合：可使用 ("time",)、("frequency",) 或二者组合。
+        # 组合顺序同时决定输出特征列的排列顺序。
+        "feature_sets": ("frequency", "time"),
+        # Welch PSD 频带定义：(名称, 下边界Hz, 上边界Hz)。
+        "frequency_bands": (
+            ("alpha", 8.0, 13.0),
+            ("beta", 13.0, 30.0),
+        ),
+        # 相对功率、谱质心和谱熵使用的总频率范围。
+        "total_power_band": (8.0, 30.0),
+        # Welch 每段采样点数：500 点在 500 Hz 下对应 1 秒。
+        "nperseg": 500,
+        # Welch 相邻分段重叠点数：250 表示 50% 重叠。
+        "noverlap": 250,
+    },
+    "csp": {
+        # CSP 特征数量：从最大/最小特征值两端对称选取。
+        "n_components": 4,
+        # 当前多分类使用 one-vs-rest 方式构造多个二分类 CSP。
+        "multiclass_strategy": "ovr",
+        # 协方差轻微对角正则，降低小样本数值不稳定。
+        "regularization": 1e-6,
+    },
+    "fbcsp": {
+        # 子频带设置：当前按参考方案提供 4-40 Hz 内 9 个无重叠 4 Hz 子带。
+        "filter_bands": (
+            ("band_4_8", 4.0, 8.0),
+            ("band_8_12", 8.0, 12.0),
+            ("band_12_16", 12.0, 16.0),
+            ("band_16_20", 16.0, 20.0),
+            ("band_20_24", 20.0, 24.0),
+            ("band_24_28", 24.0, 28.0),
+            ("band_28_32", 28.0, 32.0),
+            ("band_32_36", 32.0, 36.0),
+            ("band_36_40", 36.0, 40.0),
+        ),
+        "filter_order": 4,
+        # 每个 OVR-CSP 子带提取两端各 2 个分量，共 4 个 log-variance 特征。
+        "n_components": 4,
+        "multiclass_strategy": "ovr",
+        "regularization": 1e-6,
+    },
+    "selection": {
+        # enabled=False 时不做特征选择；True 时在训练折内做 MIBIF。
+        "enabled": False,
+        "method": "mibif",
+        # 参考方案常用 24 维；也可比较 12、24、36、48。
+        "k_best": 24,
+    },
 }
 
 # 可运行的分类器内部名称。删除某项可缩短默认实验时间；

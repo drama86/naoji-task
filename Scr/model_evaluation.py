@@ -12,7 +12,7 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import LeaveOneGroupOut, StratifiedKFold
 
-from classifiers import create_classifier
+from classifiers import create_model_pipeline
 from machine_learning_config import RANDOM_SEED
 
 
@@ -26,13 +26,14 @@ SUMMARY_METRICS = (
 
 
 def _validate_feature_arrays(features, y, subject_ids):
-    """Validate aligned feature, label, and subject arrays."""
+    """Validate aligned sample-first arrays for model evaluation."""
     features = np.asarray(features)
     y = np.asarray(y)
     subject_ids = np.asarray(subject_ids)
-    if features.ndim != 2:
+    if features.ndim < 2:
         raise ValueError(
-            f"Expected features with shape (samples, features), got {features.shape}"
+            "Expected sample-first input with shape "
+            f"(samples, ...), got {features.shape}"
         )
     if y.ndim != 1 or subject_ids.ndim != 1:
         raise ValueError("y and subject_ids must be one-dimensional")
@@ -140,8 +141,11 @@ def evaluate_classifier(
     subject_ids,
     classifier_name,
     strategy,
+    feature_config,
+    sampling_rate,
     random_seed=RANDOM_SEED,
     n_splits=5,
+    classifier_overrides=None,
 ):
     """Evaluate one classifier without sharing fitted state across folds."""
     features, y, subject_ids = _validate_feature_arrays(
@@ -150,9 +154,12 @@ def evaluate_classifier(
         subject_ids,
     )
     labels = np.unique(y)
-    base_estimator = create_classifier(
+    base_estimator = create_model_pipeline(
         classifier_name,
+        feature_config,
+        sampling_rate=sampling_rate,
         random_seed=random_seed,
+        classifier_overrides=classifier_overrides,
     )
     splits = build_validation_splits(
         y,
@@ -236,8 +243,11 @@ def evaluate_classifiers(
     subject_ids,
     classifier_names,
     strategy,
+    feature_config,
+    sampling_rate,
     random_seed=RANDOM_SEED,
     n_splits=5,
+    classifier_overrides_map=None,
 ):
     """Evaluate several classifiers with identical validation splits."""
     return {
@@ -247,9 +257,15 @@ def evaluate_classifiers(
             subject_ids,
             classifier_name,
             strategy,
+            feature_config,
+            sampling_rate,
             random_seed=random_seed,
             n_splits=n_splits,
+            classifier_overrides=(
+                None
+                if classifier_overrides_map is None
+                else classifier_overrides_map.get(classifier_name)
+            ),
         )
         for classifier_name in classifier_names
     }
-

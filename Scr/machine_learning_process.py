@@ -12,7 +12,7 @@ os.environ.setdefault("LOKY_MAX_CPU_COUNT", str(os.cpu_count() or 1))
 
 from classifiers import classifier_parameters
 from data_loader import load_subject_data
-from feature_extraction import extract_basic_features
+from feature_extraction import expected_feature_names, summarize_feature_config
 from machine_learning_config import (
     CHANNEL_COUNT,
     CLASSIFICATION_TASKS,
@@ -37,6 +37,11 @@ from machine_learning_reporting import (
 )
 from model_evaluation import evaluate_classifiers
 from preprocessing import preprocess_eeg, summarize_trial_quality
+from results_layout import (
+    COURSE_REPORTS_ROOT,
+    PROJECT_ROOT,
+    ensure_directory,
+)
 
 
 def parse_args():
@@ -45,12 +50,11 @@ def parse_args():
     Edit values in this function to switch tasks, classifiers, or validation.
     The default runs 2-, 4-, and 6-class within-subject 5-fold experiments.
     """
-    project_root = Path(__file__).resolve().parents[1]
     return argparse.Namespace(
         # 六个 sub_XX_MI.mat 文件所在目录，一般不需要修改。
-        data_dir=project_root / "Data",
+        data_dir=PROJECT_ROOT / "Data",
         # 实验结果根目录；每次运行会在其下新建时间戳子目录。
-        output_root=project_root / "Results" / "machine_learning",
+        output_root=COURSE_REPORTS_ROOT.parent,
         # 分类任务及执行顺序。
         # 可改为 ("2class",) 只跑二分类，或任意组合/顺序。
         tasks=("2class", "4class", "6class"),
@@ -66,133 +70,155 @@ def parse_args():
     )
 
 
-def load_preprocessed_features(data_dir):
-    """Load each subject, preprocess it, and immediately extract features.
+def preprocess_subject_file(subject_file, preprocessing_config=None):
+    """Load and preprocess one subject file.
 
     Returns:
-        features: Shape (720, feature_count).
+        X_processed: Shape (samples, channels, time_points).
+        y_processed: Shape (samples,).
+        processed_shape: Shared signal shape excluding sample axis.
+        quality_summary: Trial-quality diagnostics for the subject.
+        dropped_summary: Dropped-trial summary for the subject.
+    """
+    if preprocessing_config is None:
+        preprocessing_config = PREPROCESSING_CONFIG
+    subject_file = Path(subject_file)
+    subject_id = int(subject_file.stem.split("_")[1])
+    X, y = load_subject_data(subject_file, channels=CHANNEL_COUNT)
+    X_processed = preprocess_eeg(
+        X,
+        sampling_rate=SAMPLING_RATE,
+        low_cut=preprocessing_config["low_cut_hz"],
+        high_cut=preprocessing_config["high_cut_hz"],
+        filter_order=preprocessing_config["filter_order"],
+        time_window=preprocessing_config["time_window_seconds"],
+        notch_hz=preprocessing_config["notch_hz"],
+        notch_quality_factor=preprocessing_config["notch_quality_factor"],
+        spatial_reference=preprocessing_config["spatial_reference"],
+        normalize_mode=preprocessing_config["normalize_mode"],
+    )
+    quality_summary = summarize_trial_quality(
+        X_processed,
+        robust_z_threshold=preprocessing_config[
+            "trial_quality_robust_z_threshold"
+        ],
+    )
+    quality_summary.update(
+        {
+            "subject_id": subject_id,
+            "source_file": subject_file.name,
+        }
+    )
+
+    if preprocessing_config["drop_flagged_trials"]:
+        flagged_rms = set(
+            quality_summary["trial_rms"]["flagged_trial_indices_zero_based"]
+        )
+        flagged_peak_to_peak = set(
+            quality_summary["trial_peak_to_peak"][
+                "flagged_trial_indices_zero_based"
+            ]
+        )
+        rule = preprocessing_config["drop_flagged_trials_rule"]
+        if rule == "rms":
+            dropped_indices = sorted(flagged_rms)
+        elif rule == "peak_to_peak":
+            dropped_indices = sorted(flagged_peak_to_peak)
+        elif rule == "either":
+            dropped_indices = sorted(flagged_rms | flagged_peak_to_peak)
+        else:
+            raise ValueError(
+                "drop_flagged_trials_rule must be 'peak_to_peak', "
+                "'rms', or 'either'"
+            )
+        keep_mask = np.ones(X_processed.shape[0], dtype=bool)
+        keep_mask[dropped_indices] = False
+        X_processed = X_processed[keep_mask]
+        y = y[keep_mask]
+    else:
+        dropped_indices = []
+
+    dropped_summary = {
+        "subject_id": subject_id,
+        "source_file": subject_file.name,
+        "dropped_trial_indices_zero_based": dropped_indices,
+        "dropped_count": len(dropped_indices),
+        "remaining_sample_count": int(y.shape[0]),
+    }
+    return (
+        X_processed,
+        y,
+        list(X_processed.shape[1:]),
+        quality_summary,
+        dropped_summary,
+    )
+
+
+def load_preprocessed_data(data_dir, preprocessing_config=None):
+    """Load each subject and return preprocessed trial signals.
+
+    Returns:
+        signals: Shape (samples, channels, time_points).
         y: Shape (720,).
         subject_ids: Shape (720,).
-        feature_names: Stable feature-column names.
-        feature_config: JSON-serializable extraction configuration.
+        processed_shape_note: Shared processed signal shape excluding samples.
     """
     subject_files = sorted(Path(data_dir).glob("sub_*_MI.mat"))
     if len(subject_files) != 6:
         raise ValueError(
             f"Expected 6 subject files, found {len(subject_files)}"
         )
-    feature_blocks = []
+    signal_blocks = []
     label_blocks = []
     subject_blocks = []
-    reference_names = None
-    reference_config = None
+    processed_shape_note = None
     subject_quality_summaries = []
     dropped_trial_summary = []
 
     for subject_file in subject_files:
         subject_id = int(subject_file.stem.split("_")[1])
-        X, y = load_subject_data(subject_file, channels=CHANNEL_COUNT)
-        X_processed = preprocess_eeg(
-            X,
-            sampling_rate=SAMPLING_RATE,
-            low_cut=PREPROCESSING_CONFIG["low_cut_hz"],
-            high_cut=PREPROCESSING_CONFIG["high_cut_hz"],
-            filter_order=PREPROCESSING_CONFIG["filter_order"],
-            time_window=PREPROCESSING_CONFIG["time_window_seconds"],
-            notch_hz=PREPROCESSING_CONFIG["notch_hz"],
-            notch_quality_factor=PREPROCESSING_CONFIG["notch_quality_factor"],
-            spatial_reference=PREPROCESSING_CONFIG["spatial_reference"],
-            normalize_mode=PREPROCESSING_CONFIG["normalize_mode"],
-        )
-        quality_summary = summarize_trial_quality(
+        (
             X_processed,
-            robust_z_threshold=PREPROCESSING_CONFIG[
-                "trial_quality_robust_z_threshold"
-            ],
+            y,
+            subject_processed_shape,
+            quality_summary,
+            dropped_summary,
+        ) = preprocess_subject_file(
+            subject_file,
+            preprocessing_config=preprocessing_config,
         )
-        quality_summary.update(
-            {
-                "subject_id": subject_id,
-                "source_file": subject_file.name,
-            }
+        original_sample_count = int(y.shape[0]) + int(
+            dropped_summary["dropped_count"]
         )
         subject_quality_summaries.append(quality_summary)
+        dropped_trial_summary.append(dropped_summary)
 
-        if PREPROCESSING_CONFIG["drop_flagged_trials"]:
-            flagged_rms = set(
-                quality_summary["trial_rms"]["flagged_trial_indices_zero_based"]
-            )
-            flagged_peak_to_peak = set(
-                quality_summary["trial_peak_to_peak"][
-                    "flagged_trial_indices_zero_based"
-                ]
-            )
-            rule = PREPROCESSING_CONFIG["drop_flagged_trials_rule"]
-            if rule == "rms":
-                dropped_indices = sorted(flagged_rms)
-            elif rule == "peak_to_peak":
-                dropped_indices = sorted(flagged_peak_to_peak)
-            elif rule == "either":
-                dropped_indices = sorted(flagged_rms | flagged_peak_to_peak)
-            else:
-                raise ValueError(
-                    "drop_flagged_trials_rule must be 'peak_to_peak', "
-                    "'rms', or 'either'"
-                )
-            keep_mask = np.ones(X_processed.shape[0], dtype=bool)
-            keep_mask[dropped_indices] = False
-            X_processed = X_processed[keep_mask]
-            y = y[keep_mask]
-        else:
-            dropped_indices = []
-
-        dropped_trial_summary.append(
-            {
-                "subject_id": subject_id,
-                "source_file": subject_file.name,
-                "dropped_trial_indices_zero_based": dropped_indices,
-                "dropped_count": len(dropped_indices),
-                "remaining_sample_count": int(y.shape[0]),
-            }
-        )
-
-        features, feature_names, feature_config = extract_basic_features(
-            X_processed,
-            feature_sets=FEATURE_CONFIG["feature_sets"],
-            sampling_rate=SAMPLING_RATE,
-            frequency_bands=FEATURE_CONFIG["frequency_bands"],
-            total_power_band=FEATURE_CONFIG["total_power_band"],
-            nperseg=FEATURE_CONFIG["nperseg"],
-            noverlap=FEATURE_CONFIG["noverlap"],
-        )
-        if reference_names is None:
-            reference_names = feature_names
-            reference_config = feature_config
-        elif feature_names != reference_names:
-            raise RuntimeError("Feature columns differ between subjects")
-        feature_blocks.append(features)
+        if processed_shape_note is None:
+            processed_shape_note = subject_processed_shape
+        elif subject_processed_shape != processed_shape_note:
+            raise RuntimeError("Processed signal shapes differ between subjects")
+        signal_blocks.append(X_processed)
         label_blocks.append(y)
         subject_blocks.append(
             np.full(y.shape, subject_id, dtype=np.int64)
         )
         print(
-            f"被试 {subject_id}：原始 {X.shape}，"
-            f"处理后 {X_processed.shape}，特征 {features.shape}"
+            f"被试 {subject_id}：原始样本 {original_sample_count}，"
+            f"处理后 {X_processed.shape}"
         )
 
     return (
-        np.concatenate(feature_blocks, axis=0),
+        np.concatenate(signal_blocks, axis=0),
         np.concatenate(label_blocks, axis=0),
         np.concatenate(subject_blocks, axis=0),
-        reference_names,
-        reference_config,
+        processed_shape_note,
         subject_quality_summaries,
         dropped_trial_summary,
     )
 
 
-def build_feature_task(features, y, subject_ids, task_name):
-    """Filter already extracted per-trial features for one explicit task."""
+def build_signal_task(signals, y, subject_ids, task_name):
+    """Filter preprocessed trial signals for one explicit classification task."""
     if task_name not in CLASSIFICATION_TASKS:
         raise KeyError(f"Unknown task: {task_name}")
     task = CLASSIFICATION_TASKS[task_name]
@@ -215,7 +241,7 @@ def build_feature_task(features, y, subject_ids, task_name):
         "label_mapping": mapping,
     }
     return (
-        features[mask].copy(),
+        signals[mask].copy(),
         remapped_y,
         subject_ids[mask].copy(),
         metadata,
@@ -226,12 +252,12 @@ def _create_run_directory(output_root, run_name):
     """Create a non-overwriting experiment directory."""
     if run_name is None:
         run_name = datetime.now().strftime("course_report_%Y%m%d_%H%M%S")
-    run_dir = Path(output_root) / "course_report" / run_name
+    run_dir = Path(output_root) / "course_reports" / run_name
     if run_dir.exists():
         raise FileExistsError(
             f"Output directory already exists: {run_dir}"
         )
-    run_dir.mkdir(parents=True)
+    ensure_directory(run_dir)
     return run_dir
 
 
@@ -251,16 +277,15 @@ def run_experiment(args):
     run_dir = _create_run_directory(args.output_root, args.run_name)
     figures_dir = run_dir / "figures"
     print(f"实验输出目录：{run_dir}")
-    print("阶段 1/4：读取、预处理并提取全部被试特征")
+    print("阶段 1/4：读取并预处理全部被试信号")
     (
-        features,
+        signals,
         y,
         subject_ids,
-        feature_names,
-        feature_config,
+        processed_shape_note,
         trial_quality_summary,
         dropped_trial_summary,
-    ) = load_preprocessed_features(args.data_dir)
+    ) = load_preprocessed_data(args.data_dir)
 
     experiment_config = {
         "random_seed": RANDOM_SEED,
@@ -268,8 +293,11 @@ def run_experiment(args):
         "sampling_rate_hz": SAMPLING_RATE,
         "channel_count": CHANNEL_COUNT,
         "preprocessing": PREPROCESSING_CONFIG,
-        "feature_extraction": feature_config,
-        "feature_count": len(feature_names),
+        "processed_signal_shape": processed_shape_note,
+        "feature_extraction": summarize_feature_config(
+            FEATURE_CONFIG,
+            sampling_rate=SAMPLING_RATE,
+        ),
         "tasks": list(args.tasks),
         "classifiers": list(args.classifiers),
         "classifier_display_names": {
@@ -285,12 +313,12 @@ def run_experiment(args):
             args.validation_strategy
         ],
         "leakage_control": (
-            "Per-trial features use no cross-sample fitted statistics. "
-            "StandardScaler and classifier are fitted inside each training fold."
+            "For fold-fitted feature extractors such as CSP/FBCSP, "
+            "the feature extractor, StandardScaler, and classifier are "
+            "all fitted inside each training fold only."
         ),
     }
     write_json(run_dir / "experiment_config.json", experiment_config)
-    write_json(run_dir / "feature_names.json", feature_names)
     write_json(run_dir / "trial_quality_summary.json", trial_quality_summary)
     write_json(run_dir / "dropped_trials.json", dropped_trial_summary)
 
@@ -298,21 +326,30 @@ def run_experiment(args):
     all_summary_records = []
     task_reports = {}
     complete_results = {}
+    feature_names_by_task = {}
     print("阶段 2/4：执行分类任务和交叉验证")
     for task_name in args.tasks:
-        task_features, task_y, task_subject_ids, metadata = (
-            build_feature_task(features, y, subject_ids, task_name)
+        task_signals, task_y, task_subject_ids, metadata = (
+            build_signal_task(signals, y, subject_ids, task_name)
         )
+        task_feature_names = expected_feature_names(
+            FEATURE_CONFIG,
+            class_count=len(metadata["class_names"]),
+            channel_count=CHANNEL_COUNT,
+        )
+        feature_names_by_task[task_name] = task_feature_names
         print(
-            f"{task_name}：样本 {task_features.shape[0]}，"
-            f"特征 {task_features.shape[1]}"
+            f"{task_name}：样本 {task_signals.shape[0]}，"
+            f"信号形状 {task_signals.shape[1:]}"
         )
         results = evaluate_classifiers(
-            task_features,
+            task_signals,
             task_y,
             task_subject_ids,
             args.classifiers,
             args.validation_strategy,
+            feature_config=FEATURE_CONFIG,
+            sampling_rate=SAMPLING_RATE,
             random_seed=RANDOM_SEED,
         )
         complete_results[task_name] = results
@@ -362,8 +399,9 @@ def run_experiment(args):
             )
         task_reports[task_name] = {
             "task_display_name": metadata["task_name"],
-            "sample_count": int(task_features.shape[0]),
+            "sample_count": int(task_signals.shape[0]),
             "class_names": metadata["class_names"],
+            "feature_count": len(task_feature_names),
             "summary_records": summary_records,
             "comparison_figure": comparison_path.relative_to(
                 run_dir
@@ -395,6 +433,7 @@ def run_experiment(args):
         summary_fields,
     )
     write_json(run_dir / "complete_results.json", complete_results)
+    write_json(run_dir / "feature_names.json", feature_names_by_task)
 
     print("阶段 4/4：生成 Markdown 课程汇报")
     report_path = write_markdown_report(

@@ -251,7 +251,21 @@ def write_markdown_report(
         "",
         "## 特征与验证方法",
         "",
-        "- 特征：逐通道时域统计量与 Welch PSD 频域特征，共 480 维。",
+        (
+            "- 特征："
+            f"{experiment_config['feature_extraction']['report_description']}"
+        ),
+        (
+            "- 特征选择：关闭"
+            if experiment_config["feature_extraction"].get("selection") is None
+            else (
+                "- 特征选择："
+                f"{experiment_config['feature_extraction']['selection']['method']}"
+                f"，保留前 "
+                f"{experiment_config['feature_extraction']['selection']['k_best']} 维，"
+                "并在每个训练折内部拟合。"
+            )
+        ),
         (
             "- 标准化：在每个训练折内部通过 `StandardScaler` 拟合；"
             "随机森林不执行标准化。"
@@ -260,7 +274,10 @@ def write_markdown_report(
             "- 验证策略："
             f"{experiment_config['validation_strategy_display']}。"
         ),
-        "- 数据泄漏控制：测试折不参与标准化器和分类器拟合。",
+        (
+            "- 数据泄漏控制：测试折不参与特征提取器、标准化器"
+            "和分类器拟合。"
+        ),
         "",
     ]
     for task_name, task_report in task_reports.items():
@@ -270,7 +287,8 @@ def write_markdown_report(
                 "",
                 (
                     f"样本数：{task_report['sample_count']}；"
-                    f"类别：{'、'.join(task_report['class_names'])}。"
+                    f"类别：{'、'.join(task_report['class_names'])}；"
+                    f"特征维数：{task_report['feature_count']}。"
                 ),
                 "",
                 "| 模型 | Accuracy | Balanced Accuracy | Macro F1 |",

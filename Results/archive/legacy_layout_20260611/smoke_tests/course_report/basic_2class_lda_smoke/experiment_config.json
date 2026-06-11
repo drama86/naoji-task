@@ -1,0 +1,93 @@
+{
+  "random_seed": 42,
+  "subject_count": 6,
+  "sampling_rate_hz": 500,
+  "channel_count": 30,
+  "preprocessing": {
+    "low_cut_hz": 8.0,
+    "high_cut_hz": 30.0,
+    "filter_order": 4,
+    "spatial_reference": null,
+    "notch_hz": 50.0,
+    "notch_quality_factor": 30.0,
+    "time_window_seconds": [
+      1.5,
+      5.5
+    ],
+    "time_window_note": "The dataset documentation does not provide cue timing. The selected time window is an experimental choice.",
+    "normalize_mode": "zscore_per_trial_channel",
+    "trial_quality_robust_z_threshold": 3.5,
+    "drop_flagged_trials": false,
+    "drop_flagged_trials_rule": "either"
+  },
+  "processed_signal_shape": [
+    30,
+    2000
+  ],
+  "feature_extraction": {
+    "mode": "basic",
+    "report_description": "逐通道时域统计特征与 Welch PSD 频域特征。",
+    "fit_scope": "No cross-sample fit inside feature extractor.",
+    "basic": {
+      "feature_sets": [
+        "frequency",
+        "time"
+      ],
+      "sampling_rate_hz": 500,
+      "frequency_bands": [
+        {
+          "name": "alpha",
+          "low_hz": 8.0,
+          "high_hz": 13.0
+        },
+        {
+          "name": "beta",
+          "low_hz": 13.0,
+          "high_hz": 30.0
+        }
+      ],
+      "total_power_band_hz": [
+        8.0,
+        30.0
+      ],
+      "nperseg": 500,
+      "noverlap": 250
+    }
+  },
+  "tasks": [
+    "2class"
+  ],
+  "classifiers": [
+    "lda"
+  ],
+  "classifier_display_names": {
+    "lda": "LDA"
+  },
+  "classifier_parameters": {
+    "lda": {
+      "pipeline_steps": [
+        "scaler",
+        "classifier"
+      ],
+      "scaler": "StandardScaler",
+      "classifier_class": "LinearDiscriminantAnalysis",
+      "classifier_parameters": {
+        "covariance_estimator": null,
+        "n_components": null,
+        "priors": null,
+        "shrinkage": "auto",
+        "solver": "lsqr",
+        "store_covariance": false,
+        "tol": 0.0001
+      },
+      "pipeline_parameters": {
+        "memory": null,
+        "transform_input": null,
+        "verbose": false
+      }
+    }
+  },
+  "validation_strategy": "within_subject_5fold",
+  "validation_strategy_display": "Per-subject Stratified 5-Fold",
+  "leakage_control": "For fold-fitted feature extractors such as CSP/FBCSP, the feature extractor, StandardScaler, and classifier are all fitted inside each training fold only."
+}

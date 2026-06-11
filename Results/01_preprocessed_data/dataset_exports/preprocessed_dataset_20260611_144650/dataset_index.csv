@@ -1,0 +1,7 @@
+﻿subject_id,source_file,output_file,sample_count,channel_count,time_points,class_labels_present
+1,sub_01_MI.mat,sub_01_preprocessed.npz,120,30,2000,"0,1,2,3,4,5"
+2,sub_02_MI.mat,sub_02_preprocessed.npz,120,30,2000,"0,1,2,3,4,5"
+3,sub_03_MI.mat,sub_03_preprocessed.npz,120,30,2000,"0,1,2,3,4,5"
+4,sub_04_MI.mat,sub_04_preprocessed.npz,120,30,2000,"0,1,2,3,4,5"
+5,sub_05_MI.mat,sub_05_preprocessed.npz,120,30,2000,"0,1,2,3,4,5"
+6,sub_06_MI.mat,sub_06_preprocessed.npz,120,30,2000,"0,1,2,3,4,5"

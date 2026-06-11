@@ -1,0 +1,2 @@
+﻿experiment,description,task,classifier,accuracy,balanced_accuracy,macro_precision,macro_recall,macro_f1,fold_count
+basic_8_30_tw1p5_5p5,基础时域+PSD特征，8-30 Hz 预处理，1.5-5.5 s 时间窗,2class,lda,0.625,0.625,0.6262626262626263,0.625,0.6240601503759399,30

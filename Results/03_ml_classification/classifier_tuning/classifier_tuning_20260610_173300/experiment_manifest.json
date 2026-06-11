@@ -1,0 +1,550 @@
+{
+  "preprocessing": {
+    "low_cut_hz": 8.0,
+    "high_cut_hz": 30.0,
+    "filter_order": 4,
+    "spatial_reference": null,
+    "notch_hz": 50.0,
+    "notch_quality_factor": 30.0,
+    "time_window_seconds": [
+      1.5,
+      5.5
+    ],
+    "time_window_note": "The dataset documentation does not provide cue timing. The selected time window is an experimental choice.",
+    "normalize_mode": "zscore_per_trial_channel",
+    "trial_quality_robust_z_threshold": 3.5,
+    "drop_flagged_trials": false,
+    "drop_flagged_trials_rule": "either"
+  },
+  "feature_config": {
+    "mode": "basic",
+    "basic": {
+      "feature_sets": [
+        "frequency",
+        "time"
+      ],
+      "frequency_bands": [
+        [
+          "alpha",
+          8.0,
+          13.0
+        ],
+        [
+          "beta",
+          13.0,
+          30.0
+        ]
+      ],
+      "total_power_band": [
+        8.0,
+        30.0
+      ],
+      "nperseg": 500,
+      "noverlap": 250
+    },
+    "csp": {
+      "n_components": 4,
+      "multiclass_strategy": "ovr",
+      "regularization": 1e-06
+    },
+    "fbcsp": {
+      "filter_bands": [
+        [
+          "band_4_8",
+          4.0,
+          8.0
+        ],
+        [
+          "band_8_12",
+          8.0,
+          12.0
+        ],
+        [
+          "band_12_16",
+          12.0,
+          16.0
+        ],
+        [
+          "band_16_20",
+          16.0,
+          20.0
+        ],
+        [
+          "band_20_24",
+          20.0,
+          24.0
+        ],
+        [
+          "band_24_28",
+          24.0,
+          28.0
+        ],
+        [
+          "band_28_32",
+          28.0,
+          32.0
+        ],
+        [
+          "band_32_36",
+          32.0,
+          36.0
+        ],
+        [
+          "band_36_40",
+          36.0,
+          40.0
+        ]
+      ],
+      "filter_order": 4,
+      "n_components": 4,
+      "multiclass_strategy": "ovr",
+      "regularization": 1e-06
+    },
+    "selection": {
+      "enabled": false,
+      "method": "mibif",
+      "k_best": 24
+    }
+  },
+  "processed_shape": [
+    30,
+    2000
+  ],
+  "task_candidates": {
+    "2class": {
+      "lda": [
+        {
+          "name": "lda_default",
+          "overrides": {}
+        },
+        {
+          "name": "lda_svd",
+          "overrides": {
+            "solver": "svd",
+            "shrinkage": null
+          }
+        },
+        {
+          "name": "lda_eigen_auto",
+          "overrides": {
+            "solver": "eigen",
+            "shrinkage": "auto"
+          }
+        },
+        {
+          "name": "lda_lsqr_shrink_0p3",
+          "overrides": {
+            "solver": "lsqr",
+            "shrinkage": 0.3
+          }
+        }
+      ],
+      "logistic_regression": [
+        {
+          "name": "logreg_c0p03_bal",
+          "overrides": {
+            "C": 0.03,
+            "class_weight": "balanced"
+          }
+        },
+        {
+          "name": "logreg_c0p1_bal",
+          "overrides": {
+            "C": 0.1,
+            "class_weight": "balanced"
+          }
+        },
+        {
+          "name": "logreg_c0p3_bal",
+          "overrides": {
+            "C": 0.3,
+            "class_weight": "balanced"
+          }
+        },
+        {
+          "name": "logreg_c1_bal",
+          "overrides": {
+            "C": 1.0,
+            "class_weight": "balanced"
+          }
+        },
+        {
+          "name": "logreg_c0p3_none",
+          "overrides": {
+            "C": 0.3,
+            "class_weight": null
+          }
+        },
+        {
+          "name": "logreg_c1_none",
+          "overrides": {
+            "C": 1.0,
+            "class_weight": null
+          }
+        }
+      ],
+      "svm": [
+        {
+          "name": "svm_linear_c0p3",
+          "overrides": {
+            "kernel": "linear",
+            "C": 0.3,
+            "class_weight": null
+          }
+        },
+        {
+          "name": "svm_linear_c1",
+          "overrides": {
+            "kernel": "linear",
+            "C": 1.0,
+            "class_weight": null
+          }
+        },
+        {
+          "name": "svm_linear_c3",
+          "overrides": {
+            "kernel": "linear",
+            "C": 3.0,
+            "class_weight": null
+          }
+        },
+        {
+          "name": "svm_rbf_c1_scale",
+          "overrides": {
+            "kernel": "rbf",
+            "C": 1.0,
+            "gamma": "scale",
+            "class_weight": null
+          }
+        },
+        {
+          "name": "svm_rbf_c3_scale",
+          "overrides": {
+            "kernel": "rbf",
+            "C": 3.0,
+            "gamma": "scale",
+            "class_weight": null
+          }
+        },
+        {
+          "name": "svm_rbf_c10_scale",
+          "overrides": {
+            "kernel": "rbf",
+            "C": 10.0,
+            "gamma": "scale",
+            "class_weight": "balanced"
+          }
+        }
+      ],
+      "random_forest": [
+        {
+          "name": "rf_200_sqrt",
+          "overrides": {
+            "n_estimators": 200,
+            "max_features": "sqrt",
+            "class_weight": null
+          }
+        },
+        {
+          "name": "rf_500_sqrt",
+          "overrides": {
+            "n_estimators": 500,
+            "max_features": "sqrt",
+            "class_weight": null
+          }
+        },
+        {
+          "name": "rf_500_log2",
+          "overrides": {
+            "n_estimators": 500,
+            "max_features": "log2",
+            "class_weight": null
+          }
+        },
+        {
+          "name": "rf_800_sqrt",
+          "overrides": {
+            "n_estimators": 800,
+            "max_features": "sqrt",
+            "class_weight": null
+          }
+        }
+      ]
+    },
+    "4class": {
+      "lda": [
+        {
+          "name": "lda_default",
+          "overrides": {}
+        },
+        {
+          "name": "lda_svd",
+          "overrides": {
+            "solver": "svd",
+            "shrinkage": null
+          }
+        },
+        {
+          "name": "lda_eigen_auto",
+          "overrides": {
+            "solver": "eigen",
+            "shrinkage": "auto"
+          }
+        },
+        {
+          "name": "lda_lsqr_shrink_0p5",
+          "overrides": {
+            "solver": "lsqr",
+            "shrinkage": 0.5
+          }
+        }
+      ],
+      "logistic_regression": [
+        {
+          "name": "logreg_c0p1_bal",
+          "overrides": {
+            "C": 0.1,
+            "class_weight": "balanced"
+          }
+        },
+        {
+          "name": "logreg_c0p3_bal",
+          "overrides": {
+            "C": 0.3,
+            "class_weight": "balanced"
+          }
+        },
+        {
+          "name": "logreg_c1_bal",
+          "overrides": {
+            "C": 1.0,
+            "class_weight": "balanced"
+          }
+        },
+        {
+          "name": "logreg_c0p3_none",
+          "overrides": {
+            "C": 0.3,
+            "class_weight": null
+          }
+        }
+      ],
+      "svm": [
+        {
+          "name": "svm_linear_c0p3",
+          "overrides": {
+            "kernel": "linear",
+            "C": 0.3,
+            "class_weight": null
+          }
+        },
+        {
+          "name": "svm_linear_c1",
+          "overrides": {
+            "kernel": "linear",
+            "C": 1.0,
+            "class_weight": null
+          }
+        },
+        {
+          "name": "svm_rbf_c1_scale",
+          "overrides": {
+            "kernel": "rbf",
+            "C": 1.0,
+            "gamma": "scale",
+            "class_weight": null
+          }
+        },
+        {
+          "name": "svm_rbf_c3_scale",
+          "overrides": {
+            "kernel": "rbf",
+            "C": 3.0,
+            "gamma": "scale",
+            "class_weight": null
+          }
+        }
+      ],
+      "random_forest": [
+        {
+          "name": "rf_200_sqrt",
+          "overrides": {
+            "n_estimators": 200,
+            "max_features": "sqrt",
+            "class_weight": null
+          }
+        },
+        {
+          "name": "rf_500_sqrt",
+          "overrides": {
+            "n_estimators": 500,
+            "max_features": "sqrt",
+            "class_weight": null
+          }
+        },
+        {
+          "name": "rf_800_sqrt",
+          "overrides": {
+            "n_estimators": 800,
+            "max_features": "sqrt",
+            "class_weight": null
+          }
+        },
+        {
+          "name": "rf_500_log2",
+          "overrides": {
+            "n_estimators": 500,
+            "max_features": "log2",
+            "class_weight": null
+          }
+        },
+        {
+          "name": "rf_500_sqrt_bal",
+          "overrides": {
+            "n_estimators": 500,
+            "max_features": "sqrt",
+            "class_weight": "balanced"
+          }
+        },
+        {
+          "name": "rf_800_log2",
+          "overrides": {
+            "n_estimators": 800,
+            "max_features": "log2",
+            "class_weight": null
+          }
+        }
+      ]
+    },
+    "6class": {
+      "lda": [
+        {
+          "name": "lda_default",
+          "overrides": {}
+        },
+        {
+          "name": "lda_svd",
+          "overrides": {
+            "solver": "svd",
+            "shrinkage": null
+          }
+        },
+        {
+          "name": "lda_eigen_auto",
+          "overrides": {
+            "solver": "eigen",
+            "shrinkage": "auto"
+          }
+        },
+        {
+          "name": "lda_lsqr_shrink_0p5",
+          "overrides": {
+            "solver": "lsqr",
+            "shrinkage": 0.5
+          }
+        }
+      ],
+      "logistic_regression": [
+        {
+          "name": "logreg_c0p1_bal",
+          "overrides": {
+            "C": 0.1,
+            "class_weight": "balanced"
+          }
+        },
+        {
+          "name": "logreg_c0p3_bal",
+          "overrides": {
+            "C": 0.3,
+            "class_weight": "balanced"
+          }
+        },
+        {
+          "name": "logreg_c1_bal",
+          "overrides": {
+            "C": 1.0,
+            "class_weight": "balanced"
+          }
+        },
+        {
+          "name": "logreg_c0p3_none",
+          "overrides": {
+            "C": 0.3,
+            "class_weight": null
+          }
+        }
+      ],
+      "svm": [
+        {
+          "name": "svm_linear_c0p3",
+          "overrides": {
+            "kernel": "linear",
+            "C": 0.3,
+            "class_weight": null
+          }
+        },
+        {
+          "name": "svm_linear_c1",
+          "overrides": {
+            "kernel": "linear",
+            "C": 1.0,
+            "class_weight": null
+          }
+        },
+        {
+          "name": "svm_rbf_c1_scale",
+          "overrides": {
+            "kernel": "rbf",
+            "C": 1.0,
+            "gamma": "scale",
+            "class_weight": null
+          }
+        },
+        {
+          "name": "svm_rbf_c3_scale",
+          "overrides": {
+            "kernel": "rbf",
+            "C": 3.0,
+            "gamma": "scale",
+            "class_weight": null
+          }
+        }
+      ],
+      "random_forest": [
+        {
+          "name": "rf_200_sqrt",
+          "overrides": {
+            "n_estimators": 200,
+            "max_features": "sqrt",
+            "class_weight": null
+          }
+        },
+        {
+          "name": "rf_500_sqrt",
+          "overrides": {
+            "n_estimators": 500,
+            "max_features": "sqrt",
+            "class_weight": null
+          }
+        },
+        {
+          "name": "rf_800_sqrt",
+          "overrides": {
+            "n_estimators": 800,
+            "max_features": "sqrt",
+            "class_weight": null
+          }
+        },
+        {
+          "name": "rf_500_log2",
+          "overrides": {
+            "n_estimators": 500,
+            "max_features": "log2",
+            "class_weight": null
+          }
+        }
+      ]
+    }
+  },
+  "selection_note": "This is a development-stage CV tuning sweep on the same outer validation protocol; confirm final report numbers with a nested-CV rerun if needed."
+}

@@ -1,0 +1,186 @@
+[
+  {
+    "sample_count": 120,
+    "robust_z_threshold": 3.5,
+    "trial_rms": {
+      "median": 1.0,
+      "mad": 0.0,
+      "minimum": 0.9999999999999999,
+      "maximum": 1.0,
+      "mean": 1.0,
+      "standard_deviation": 5.3628867073790325e-17,
+      "flagged_trial_indices_zero_based": [],
+      "flagged_count": 0
+    },
+    "trial_peak_to_peak": {
+      "median": 11.877920417172477,
+      "mad": 1.5940352933163489,
+      "minimum": 7.037908496987547,
+      "maximum": 20.16796749122451,
+      "mean": 12.081087082423236,
+      "standard_deviation": 2.8668234268048605,
+      "flagged_trial_indices_zero_based": [
+        72
+      ],
+      "flagged_count": 1
+    },
+    "subject_id": 1,
+    "source_file": "sub_01_MI.mat"
+  },
+  {
+    "sample_count": 120,
+    "robust_z_threshold": 3.5,
+    "trial_rms": {
+      "median": 1.0,
+      "mad": 0.0,
+      "minimum": 0.9999999999999999,
+      "maximum": 1.0,
+      "mean": 1.0,
+      "standard_deviation": 5.457812425614245e-17,
+      "flagged_trial_indices_zero_based": [],
+      "flagged_count": 0
+    },
+    "trial_peak_to_peak": {
+      "median": 8.126321397069606,
+      "mad": 0.5714183998459701,
+      "minimum": 6.891939388712087,
+      "maximum": 17.415184579752143,
+      "mean": 8.619793323628096,
+      "standard_deviation": 1.695672099591335,
+      "flagged_trial_indices_zero_based": [
+        23,
+        25,
+        28,
+        34,
+        51,
+        72,
+        82,
+        85,
+        94
+      ],
+      "flagged_count": 9
+    },
+    "subject_id": 2,
+    "source_file": "sub_02_MI.mat"
+  },
+  {
+    "sample_count": 120,
+    "robust_z_threshold": 3.5,
+    "trial_rms": {
+      "median": 1.0,
+      "mad": 0.0,
+      "minimum": 0.9999999999999999,
+      "maximum": 1.0,
+      "mean": 1.0,
+      "standard_deviation": 5.642875308493207e-17,
+      "flagged_trial_indices_zero_based": [],
+      "flagged_count": 0
+    },
+    "trial_peak_to_peak": {
+      "median": 10.560992197055457,
+      "mad": 1.1557978250943668,
+      "minimum": 6.994428704837477,
+      "maximum": 16.179559860863346,
+      "mean": 10.715257015911309,
+      "standard_deviation": 1.7292839601798844,
+      "flagged_trial_indices_zero_based": [],
+      "flagged_count": 0
+    },
+    "subject_id": 3,
+    "source_file": "sub_03_MI.mat"
+  },
+  {
+    "sample_count": 120,
+    "robust_z_threshold": 3.5,
+    "trial_rms": {
+      "median": 1.0,
+      "mad": 0.0,
+      "minimum": 0.9999999999999999,
+      "maximum": 1.0,
+      "mean": 1.0,
+      "standard_deviation": 4.8605288448017766e-17,
+      "flagged_trial_indices_zero_based": [],
+      "flagged_count": 0
+    },
+    "trial_peak_to_peak": {
+      "median": 8.96831321717535,
+      "mad": 0.8312528608080756,
+      "minimum": 7.044450639123667,
+      "maximum": 14.753952947838647,
+      "mean": 9.32201376208584,
+      "standard_deviation": 1.5697768155326006,
+      "flagged_trial_indices_zero_based": [
+        24,
+        38,
+        80,
+        94
+      ],
+      "flagged_count": 4
+    },
+    "subject_id": 4,
+    "source_file": "sub_04_MI.mat"
+  },
+  {
+    "sample_count": 120,
+    "robust_z_threshold": 3.5,
+    "trial_rms": {
+      "median": 1.0,
+      "mad": 0.0,
+      "minimum": 0.9999999999999999,
+      "maximum": 1.0,
+      "mean": 1.0,
+      "standard_deviation": 6.164820968141853e-17,
+      "flagged_trial_indices_zero_based": [],
+      "flagged_count": 0
+    },
+    "trial_peak_to_peak": {
+      "median": 8.200490208003986,
+      "mad": 0.5439994245001909,
+      "minimum": 6.9011271254510955,
+      "maximum": 19.066822465087093,
+      "mean": 8.532268204032492,
+      "standard_deviation": 1.6016224784479514,
+      "flagged_trial_indices_zero_based": [
+        0,
+        6,
+        30,
+        49,
+        82,
+        87,
+        94,
+        116,
+        117,
+        119
+      ],
+      "flagged_count": 10
+    },
+    "subject_id": 5,
+    "source_file": "sub_05_MI.mat"
+  },
+  {
+    "sample_count": 120,
+    "robust_z_threshold": 3.5,
+    "trial_rms": {
+      "median": 1.0,
+      "mad": 0.0,
+      "minimum": 0.9999999999999999,
+      "maximum": 1.0,
+      "mean": 1.0,
+      "standard_deviation": 4.965068306494546e-17,
+      "flagged_trial_indices_zero_based": [],
+      "flagged_count": 0
+    },
+    "trial_peak_to_peak": {
+      "median": 9.904031589679406,
+      "mad": 0.8300489174485168,
+      "minimum": 7.193837175447937,
+      "maximum": 13.91817342980339,
+      "mean": 9.928928270163844,
+      "standard_deviation": 1.2387373422877037,
+      "flagged_trial_indices_zero_based": [],
+      "flagged_count": 0
+    },
+    "subject_id": 6,
+    "source_file": "sub_06_MI.mat"
+  }
+]

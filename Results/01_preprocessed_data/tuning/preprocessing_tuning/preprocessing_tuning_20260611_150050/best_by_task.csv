@@ -1,0 +1,2 @@
+﻿experiment,description,task,best_classifier,balanced_accuracy,macro_f1,dropped_trial_count,time_window_seconds,drop_flagged_trials,spatial_reference
+tw_1p5_5p5_keep,1.5-5.5 s，不剔除异常 trial,2class,lda,0.625,0.6240601503759399,0,"(1.5, 5.5)",False,None

@@ -9,6 +9,7 @@ from pathlib import Path
 from machine_learning_config import PREPROCESSING_CONFIG
 from machine_learning_process import parse_args, run_experiment
 from machine_learning_reporting import write_csv, write_json
+from results_layout import PREPROCESSED_TUNING_ROOT, timestamped_name
 
 
 EXPERIMENTS = (
@@ -87,15 +88,8 @@ def _build_args(output_root, run_name):
 def run_preprocessing_experiments():
     """Run all predefined preprocessing ablations and save comparison tables."""
     original_preprocessing = deepcopy(PREPROCESSING_CONFIG)
-    project_root = Path(__file__).resolve().parents[1]
-    batch_name = datetime.now().strftime("preprocessing_tuning_%Y%m%d_%H%M%S")
-    batch_root = (
-        project_root
-        / "Results"
-        / "machine_learning"
-        / "preprocessing_tuning"
-        / batch_name
-    )
+    batch_name = timestamped_name("preprocessing_tuning")
+    batch_root = PREPROCESSED_TUNING_ROOT / "preprocessing_tuning" / batch_name
     batch_root.mkdir(parents=True, exist_ok=False)
 
     all_summary_records = []

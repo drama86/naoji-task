@@ -8,10 +8,31 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
+from feature_extraction import build_feature_selector, build_feature_transformer
 from machine_learning_config import CLASSIFIER_NAMES, RANDOM_SEED
 
 
-def create_classifier(classifier_name, random_seed=RANDOM_SEED):
+def _split_overrides(overrides):
+    """Separate scaler overrides from estimator overrides."""
+    overrides = dict(overrides or {})
+    scaler_overrides = {
+        key.removeprefix("scaler__"): value
+        for key, value in list(overrides.items())
+        if key.startswith("scaler__")
+    }
+    estimator_overrides = {
+        key: value
+        for key, value in overrides.items()
+        if not key.startswith("scaler__")
+    }
+    return scaler_overrides, estimator_overrides
+
+
+def create_classifier(
+    classifier_name,
+    random_seed=RANDOM_SEED,
+    overrides=None,
+):
     """Create one configured classical classifier.
 
     The returned estimator contains StandardScaler inside its Pipeline when
@@ -24,6 +45,8 @@ def create_classifier(classifier_name, random_seed=RANDOM_SEED):
             f"choose from {CLASSIFIER_NAMES}"
         )
 
+    scaler_overrides, estimator_overrides = _split_overrides(overrides)
+
     if classifier_name == "lda":
         estimator = LinearDiscriminantAnalysis(
             # 求解器："lsqr" 支持 shrinkage，适合特征数较多的情况。
@@ -32,9 +55,11 @@ def create_classifier(classifier_name, random_seed=RANDOM_SEED):
             # 协方差收缩："auto" 自动估计，有助于小样本高维数据稳定。
             shrinkage="auto",
         )
+        estimator.set_params(**estimator_overrides)
+        scaler = StandardScaler(**scaler_overrides)
         return Pipeline(
             [
-                ("scaler", StandardScaler()),
+                ("scaler", scaler),
                 ("classifier", estimator),
             ]
         )
@@ -52,9 +77,11 @@ def create_classifier(classifier_name, random_seed=RANDOM_SEED):
             # 当前数据均衡，也可改为 None 作为对照。
             class_weight="balanced",
         )
+        estimator.set_params(**estimator_overrides)
+        scaler = StandardScaler(**scaler_overrides)
         return Pipeline(
             [
-                ("scaler", StandardScaler()),
+                ("scaler", scaler),
                 ("classifier", estimator),
             ]
         )
@@ -69,9 +96,11 @@ def create_classifier(classifier_name, random_seed=RANDOM_SEED):
             # 固定涉及随机性的求解过程，保证实验可复现。
             random_state=random_seed,
         )
+        estimator.set_params(**estimator_overrides)
+        scaler = StandardScaler(**scaler_overrides)
         return Pipeline(
             [
-                ("scaler", StandardScaler()),
+                ("scaler", scaler),
                 ("classifier", estimator),
             ]
         )
@@ -87,9 +116,11 @@ def create_classifier(classifier_name, random_seed=RANDOM_SEED):
             # p=1 为曼哈顿距离，p=2 为欧氏距离。
             p=2,
         )
+        estimator.set_params(**estimator_overrides)
+        scaler = StandardScaler(**scaler_overrides)
         return Pipeline(
             [
-                ("scaler", StandardScaler()),
+                ("scaler", scaler),
                 ("classifier", estimator),
             ]
         )
@@ -108,6 +139,7 @@ def create_classifier(classifier_name, random_seed=RANDOM_SEED):
         # Windows 环境若出现 joblib/WMIC 警告，建议保持 None。
         n_jobs=None,
     )
+    estimator.set_params(**estimator_overrides)
     return Pipeline(
         [
             ("scaler", "passthrough"),
@@ -116,9 +148,17 @@ def create_classifier(classifier_name, random_seed=RANDOM_SEED):
     )
 
 
-def classifier_parameters(classifier_name, random_seed=RANDOM_SEED):
+def classifier_parameters(
+    classifier_name,
+    random_seed=RANDOM_SEED,
+    overrides=None,
+):
     """Return JSON-serializable parameters for one configured classifier."""
-    pipeline = create_classifier(classifier_name, random_seed=random_seed)
+    pipeline = create_classifier(
+        classifier_name,
+        random_seed=random_seed,
+        overrides=overrides,
+    )
     parameters = pipeline.get_params(deep=False)
     classifier = pipeline.named_steps["classifier"]
     return {
@@ -140,3 +180,36 @@ def classifier_parameters(classifier_name, random_seed=RANDOM_SEED):
             if isinstance(value, (str, int, float, bool, type(None)))
         },
     }
+
+
+def create_model_pipeline(
+    classifier_name,
+    feature_config,
+    sampling_rate,
+    random_seed=RANDOM_SEED,
+    classifier_overrides=None,
+):
+    """Create one end-to-end pipeline: feature extraction + classifier."""
+    return Pipeline(
+        [
+            (
+                "feature_extractor",
+                build_feature_transformer(
+                    feature_config,
+                    sampling_rate=sampling_rate,
+                ),
+            ),
+            (
+                "feature_selector",
+                build_feature_selector(feature_config),
+            ),
+            (
+                "classifier_pipeline",
+                create_classifier(
+                    classifier_name,
+                    random_seed=random_seed,
+                    overrides=classifier_overrides,
+                ),
+            ),
+        ]
+    )

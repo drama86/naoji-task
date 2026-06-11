@@ -1,0 +1,4 @@
+﻿task,classifier,candidate,classifier_overrides,accuracy,balanced_accuracy,macro_precision,macro_recall,macro_f1,fold_count
+2class,logistic_regression,logreg_c0p03_bal,"{'C': 0.03, 'class_weight': 'balanced'}",0.6416666666666667,0.6416666666666666,0.6420217209690894,0.6416666666666666,0.6414425682718365,30
+4class,random_forest,rf_500_sqrt,"{'n_estimators': 500, 'max_features': 'sqrt', 'class_weight': None}",0.3458333333333333,0.3458333333333333,0.3457014320708498,0.3458333333333333,0.3457306111967129,30
+6class,lda,lda_default,{},0.2638888888888889,0.2638888888888889,0.26833944678128274,0.2638888888888889,0.2651406198087019,30

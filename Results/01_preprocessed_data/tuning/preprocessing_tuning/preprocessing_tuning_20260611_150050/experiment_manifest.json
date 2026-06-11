@@ -1,0 +1,25 @@
+[
+  {
+    "experiment": "tw_1p5_5p5_keep",
+    "description": "1.5-5.5 s，不剔除异常 trial",
+    "run_dir": "/home/epilogue/智能i信息/Results/01_preprocessed_data/tuning/preprocessing_tuning/preprocessing_tuning_20260611_150050/course_reports/tw_1p5_5p5_keep",
+    "dropped_trial_count": 0,
+    "preprocessing": {
+      "low_cut_hz": 8.0,
+      "high_cut_hz": 30.0,
+      "filter_order": 4,
+      "spatial_reference": null,
+      "notch_hz": 50.0,
+      "notch_quality_factor": 30.0,
+      "time_window_seconds": [
+        1.5,
+        5.5
+      ],
+      "time_window_note": "The dataset documentation does not provide cue timing. The selected time window is an experimental choice.",
+      "normalize_mode": "zscore_per_trial_channel",
+      "trial_quality_robust_z_threshold": 3.5,
+      "drop_flagged_trials": false,
+      "drop_flagged_trials_rule": "either"
+    }
+  }
+]

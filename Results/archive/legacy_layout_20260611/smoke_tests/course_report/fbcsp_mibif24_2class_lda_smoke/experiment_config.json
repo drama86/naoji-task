@@ -1,0 +1,128 @@
+{
+  "random_seed": 42,
+  "subject_count": 6,
+  "sampling_rate_hz": 500,
+  "channel_count": 30,
+  "preprocessing": {
+    "low_cut_hz": 4.0,
+    "high_cut_hz": 40.0,
+    "filter_order": 4,
+    "spatial_reference": null,
+    "notch_hz": 50.0,
+    "notch_quality_factor": 30.0,
+    "time_window_seconds": [
+      1.5,
+      5.5
+    ],
+    "time_window_note": "The dataset documentation does not provide cue timing. The selected time window is an experimental choice.",
+    "normalize_mode": "zscore_per_trial_channel",
+    "trial_quality_robust_z_threshold": 3.5,
+    "drop_flagged_trials": false,
+    "drop_flagged_trials_rule": "either"
+  },
+  "processed_signal_shape": [
+    30,
+    2000
+  ],
+  "feature_extraction": {
+    "mode": "fbcsp",
+    "report_description": "Filter-Bank CSP 空间判别特征；每个训练折内部按子频带重新拟合。",
+    "fit_scope": "Fitted inside each training fold only.",
+    "selection": {
+      "enabled": true,
+      "method": "mibif",
+      "k_best": 24,
+      "fit_scope": "Fitted inside each training fold only."
+    },
+    "fbcsp": {
+      "sampling_rate_hz": 500,
+      "filter_bands": [
+        {
+          "name": "band_4_8",
+          "low_hz": 4.0,
+          "high_hz": 8.0
+        },
+        {
+          "name": "band_8_12",
+          "low_hz": 8.0,
+          "high_hz": 12.0
+        },
+        {
+          "name": "band_12_16",
+          "low_hz": 12.0,
+          "high_hz": 16.0
+        },
+        {
+          "name": "band_16_20",
+          "low_hz": 16.0,
+          "high_hz": 20.0
+        },
+        {
+          "name": "band_20_24",
+          "low_hz": 20.0,
+          "high_hz": 24.0
+        },
+        {
+          "name": "band_24_28",
+          "low_hz": 24.0,
+          "high_hz": 28.0
+        },
+        {
+          "name": "band_28_32",
+          "low_hz": 28.0,
+          "high_hz": 32.0
+        },
+        {
+          "name": "band_32_36",
+          "low_hz": 32.0,
+          "high_hz": 36.0
+        },
+        {
+          "name": "band_36_40",
+          "low_hz": 36.0,
+          "high_hz": 40.0
+        }
+      ],
+      "filter_order": 4,
+      "n_components": 4,
+      "multiclass_strategy": "ovr",
+      "regularization": 1e-06
+    }
+  },
+  "tasks": [
+    "2class"
+  ],
+  "classifiers": [
+    "lda"
+  ],
+  "classifier_display_names": {
+    "lda": "LDA"
+  },
+  "classifier_parameters": {
+    "lda": {
+      "pipeline_steps": [
+        "scaler",
+        "classifier"
+      ],
+      "scaler": "StandardScaler",
+      "classifier_class": "LinearDiscriminantAnalysis",
+      "classifier_parameters": {
+        "covariance_estimator": null,
+        "n_components": null,
+        "priors": null,
+        "shrinkage": "auto",
+        "solver": "lsqr",
+        "store_covariance": false,
+        "tol": 0.0001
+      },
+      "pipeline_parameters": {
+        "memory": null,
+        "transform_input": null,
+        "verbose": false
+      }
+    }
+  },
+  "validation_strategy": "within_subject_5fold",
+  "validation_strategy_display": "Per-subject Stratified 5-Fold",
+  "leakage_control": "For fold-fitted feature extractors such as CSP/FBCSP, the feature extractor, StandardScaler, and classifier are all fitted inside each training fold only."
+}

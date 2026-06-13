@@ -67,11 +67,12 @@ python -m pip install -r requirements.txt
 | `Scr/preprocessing.py` | EEG 预处理函数库：输入校验、逐 trial 去均值、可选 CAR、可选 50 Hz 陷波、零相位带通、时间窗截取、单 trial z-score 与 trial 质量摘要。 |
 | `Scr/feature_extraction.py` | 提供基础时频特征、CSP、FBCSP 与折内 MIBIF 选择器，并封装为可放入 scikit-learn `Pipeline` 的变换器。 |
 | `Scr/classifiers.py` | 创建 LDA、SVM、逻辑回归、KNN、随机森林，并自动组装需要折内标准化的 `Pipeline`。 |
-| `Scr/model_evaluation.py` | 构建 LOSO 或被试内 5 折验证，计算折内指标、总体指标和混淆矩阵。 |
-| `Scr/machine_learning_reporting.py` | 写出 JSON、CSV、Markdown 报告，并保存混淆矩阵、模型对比图和折间曲线。 |
+| `Scr/model_evaluation.py` | 构建 LOSO 或被试内 5 折验证，计算折内指标、总体指标、被试级指标和混淆矩阵。 |
+| `Scr/machine_learning_reporting.py` | 写出 JSON、CSV、Markdown 报告，并保存总体/被试级混淆矩阵、模型对比图和折间曲线。 |
 | `Scr/machine_learning_config.py` | 集中保存类别定义、预处理、特征、分类器和验证策略配置。 |
 | `Scr/results_layout.py` | 统一定义新 `Results/` 目录布局和常用路径常量。 |
 | `Scr/machine_learning_process.py` | 默认主流程入口：读取 6 个被试、完成推荐预处理、执行 2/4/6 分类实验并生成课程报告。 |
+| `Scr/cross_subject_process.py` | 跨被试 LOSO 主流程入口：复用默认流程，但改为留一被试测试的跨被试验证。 |
 | `Scr/preprocessing_experiments.py` | 预处理消融实验入口，比较不同时间窗和异常 trial 剔除策略。 |
 | `Scr/feature_experiments.py` | 特征工程对比入口，比较基础特征、CSP、FBCSP 与 OVR-FBCSP + MIBIF 方案。 |
 | `Scr/classifier_experiments.py` | 分类器专项调参入口，在当前最稳前端上比较多组分类器超参数。 |
@@ -93,12 +94,25 @@ python -m pip install -r requirements.txt
 
 预处理与特征提取结论见 [PREPROCESSING_README.md](/home/epilogue/智能i信息/PREPROCESSING_README.md)。
 
+此外，项目现支持两种验证口径：
+
+| 验证策略 | 含义 | 入口 |
+|---|---|---|
+| `within_subject_5fold` | 每个被试内部独立做分层 5 折，衡量被试内分类能力 | `Scr/machine_learning_process.py` |
+| `loso` | 每次留出 1 个完整被试测试，剩余 5 个被试训练，衡量跨被试泛化能力 | `Scr/cross_subject_process.py` |
+
 ## 常用运行命令
 
 运行默认经典机器学习实验：
 
 ```powershell
 python Scr\machine_learning_process.py
+```
+
+运行跨被试 LOSO 经典机器学习实验：
+
+```powershell
+python Scr\cross_subject_process.py
 ```
 
 运行预处理消融实验：
@@ -166,6 +180,12 @@ Results/
 Results/03_ml_classification/course_reports/course_report_YYYYMMDD_HHMMSS/
 ```
 
+跨被试 LOSO 主流程每次运行会创建：
+
+```text
+Results/03_ml_classification/course_reports/course_report_loso_YYYYMMDD_HHMMSS/
+```
+
 主要输出包括：
 
 | 文件或目录 | 内容 |
@@ -176,9 +196,12 @@ Results/03_ml_classification/course_reports/course_report_YYYYMMDD_HHMMSS/
 | `dropped_trials.json` | 异常 trial 剔除记录；默认主线不删样本 |
 | `fold_metrics.csv` | 每个任务、分类器、验证折的指标 |
 | `summary_metrics.csv` | 每个任务与分类器的汇总指标 |
+| `subject_metrics.csv` | 每个任务、分类器、被试的单独汇总指标 |
 | `complete_results.json` | 完整折级结果、预测和混淆矩阵 |
-| `figures/` | 模型对比图、折间曲线、计数与归一化混淆矩阵 |
+| `figures/` | 模型对比图、折间曲线、总体混淆矩阵、被试级对比图与各被试归一化混淆矩阵 |
 | `report.md` | 自动生成的 Markdown 课程报告 |
+
+说明：在 `within_subject_5fold` 下，`subject_metrics.csv` 表示“该被试内部 5 折汇总结果”；在 `loso` 下，表示“该被试作为完整测试集被留出时的跨被试结果”。
 
 预处理、特征和分类器调参输出分别位于：
 

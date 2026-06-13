@@ -82,6 +82,42 @@ def _classification_metrics(y_true, y_pred, labels):
     return overall, per_class
 
 
+def _subject_level_results(y_true, y_pred, subject_ids, labels):
+    """Summarize out-of-fold predictions for each subject separately."""
+    subject_records = []
+    for subject_id in np.unique(subject_ids):
+        subject_mask = subject_ids == subject_id
+        subject_y_true = y_true[subject_mask]
+        subject_y_pred = y_pred[subject_mask]
+        overall, per_class = _classification_metrics(
+            subject_y_true,
+            subject_y_pred,
+            labels,
+        )
+        matrix = confusion_matrix(
+            subject_y_true,
+            subject_y_pred,
+            labels=labels,
+        )
+        normalized_matrix = np.divide(
+            matrix,
+            matrix.sum(axis=1, keepdims=True),
+            out=np.zeros_like(matrix, dtype=np.float64),
+            where=matrix.sum(axis=1, keepdims=True) > 0,
+        )
+        subject_records.append(
+            {
+                "subject_id": int(subject_id),
+                "sample_count": int(subject_mask.sum()),
+                **overall,
+                "per_class_metrics": per_class,
+                "confusion_matrix": matrix.astype(int).tolist(),
+                "normalized_confusion_matrix": normalized_matrix.tolist(),
+            }
+        )
+    return subject_records
+
+
 def build_validation_splits(
     y,
     subject_ids,
@@ -222,6 +258,12 @@ def evaluate_classifier(
         for metric in SUMMARY_METRICS
         for statistic, function in (("mean", np.mean), ("std", np.std))
     }
+    subject_records = _subject_level_results(
+        y,
+        predictions,
+        subject_ids,
+        labels,
+    )
     return {
         "classifier": classifier_name,
         "validation_strategy": strategy,
@@ -231,6 +273,7 @@ def evaluate_classifier(
         "fold_summary": fold_summary,
         "out_of_fold_metrics": overall,
         "per_class_metrics": per_class,
+        "subject_records": subject_records,
         "confusion_matrix": matrix.astype(int).tolist(),
         "normalized_confusion_matrix": normalized_matrix.tolist(),
         "predictions": predictions.astype(int).tolist(),

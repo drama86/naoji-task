@@ -28,9 +28,11 @@ from machine_learning_config import (
 from machine_learning_reporting import (
     flatten_fold_records,
     flatten_summary_records,
+    flatten_subject_records,
     plot_confusion_matrix,
     plot_fold_accuracy,
     plot_model_comparison,
+    plot_subject_metric_comparison,
     write_csv,
     write_json,
     write_markdown_report,
@@ -324,6 +326,7 @@ def run_experiment(args):
 
     all_fold_records = []
     all_summary_records = []
+    all_subject_records = []
     task_reports = {}
     complete_results = {}
     feature_names_by_task = {}
@@ -355,8 +358,10 @@ def run_experiment(args):
         complete_results[task_name] = results
         fold_records = flatten_fold_records(task_name, results)
         summary_records = flatten_summary_records(task_name, results)
+        subject_summary_records = flatten_subject_records(task_name, results)
         all_fold_records.extend(fold_records)
         all_summary_records.extend(summary_records)
+        all_subject_records.extend(subject_summary_records)
 
         print("阶段 3/4：保存指标和绘制结果图")
         task_figures_dir = figures_dir / task_name
@@ -370,7 +375,14 @@ def run_experiment(args):
             task_figures_dir / "fold_balanced_accuracy.png",
             f"{task_name} 各折 Balanced Accuracy",
         )
+        subject_metric_path = plot_subject_metric_comparison(
+            results,
+            task_figures_dir / "subject_balanced_accuracy.png",
+            f"{task_name} 各被试 Balanced Accuracy",
+            metric="balanced_accuracy",
+        )
         confusion_figures = {}
+        subject_confusion_figures = {}
         for classifier_name, result in results.items():
             count_path = task_figures_dir / (
                 f"{classifier_name}_confusion_counts.png"
@@ -397,17 +409,47 @@ def run_experiment(args):
             confusion_figures[classifier_name] = (
                 normalized_path.relative_to(run_dir).as_posix()
             )
+            classifier_subject_figures = {}
+            for subject_record in result.get("subject_records", []):
+                subject_id = subject_record["subject_id"]
+                subject_path = task_figures_dir / "subjects" / classifier_name / (
+                    f"subject_{subject_id:02d}_confusion_normalized.png"
+                )
+                plot_confusion_matrix(
+                    subject_record["normalized_confusion_matrix"],
+                    metadata["class_names"],
+                    subject_path,
+                    (
+                        f"{task_name} | {CLASSIFIER_DISPLAY_NAMES[classifier_name]} "
+                        f"| 被试 {subject_id} | 归一化"
+                    ),
+                    normalized=True,
+                )
+                classifier_subject_figures[str(subject_id)] = (
+                    subject_path.relative_to(run_dir).as_posix()
+                )
+            subject_confusion_figures[classifier_name] = (
+                classifier_subject_figures
+            )
         task_reports[task_name] = {
             "task_display_name": metadata["task_name"],
             "sample_count": int(task_signals.shape[0]),
             "class_names": metadata["class_names"],
             "feature_count": len(task_feature_names),
             "summary_records": summary_records,
+            "subject_summary_records": sorted(
+                subject_summary_records,
+                key=lambda item: (item["subject_id"], item["classifier"]),
+            ),
             "comparison_figure": comparison_path.relative_to(
                 run_dir
             ).as_posix(),
             "fold_figure": fold_path.relative_to(run_dir).as_posix(),
+            "subject_metric_figure": subject_metric_path.relative_to(
+                run_dir
+            ).as_posix(),
             "confusion_figures": confusion_figures,
+            "subject_confusion_figures": subject_confusion_figures,
         }
 
     fold_fields = [
@@ -431,6 +473,12 @@ def run_experiment(args):
         run_dir / "summary_metrics.csv",
         all_summary_records,
         summary_fields,
+    )
+    subject_fields = list(all_subject_records[0])
+    write_csv(
+        run_dir / "subject_metrics.csv",
+        all_subject_records,
+        subject_fields,
     )
     write_json(run_dir / "complete_results.json", complete_results)
     write_json(run_dir / "feature_names.json", feature_names_by_task)

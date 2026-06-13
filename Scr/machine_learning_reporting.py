@@ -84,6 +84,27 @@ def flatten_summary_records(task_name, results):
     return records
 
 
+def flatten_subject_records(task_name, results):
+    """Flatten per-subject summaries from all classifiers for CSV output."""
+    records = []
+    for classifier_name, result in results.items():
+        for subject_record in result.get("subject_records", []):
+            records.append(
+                {
+                    "task": task_name,
+                    "classifier": classifier_name,
+                    "validation_strategy": result["validation_strategy"],
+                    "subject_id": subject_record["subject_id"],
+                    "sample_count": subject_record["sample_count"],
+                    **{
+                        metric: subject_record[metric]
+                        for metric in SUMMARY_METRICS
+                    },
+                }
+            )
+    return records
+
+
 def plot_confusion_matrix(
     matrix,
     class_names,
@@ -125,6 +146,44 @@ def plot_confusion_matrix(
                 va="center",
                 color="white" if value > threshold else "black",
             )
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    figure.savefig(output_path, dpi=160)
+    plt.close(figure)
+    return output_path
+
+
+def plot_subject_metric_comparison(results, output_path, title, metric="balanced_accuracy"):
+    """Plot one metric across subjects for all classifiers."""
+    classifier_names = list(results)
+    figure, axis = plt.subplots(figsize=(11, 6), constrained_layout=True)
+    subject_ids = sorted(
+        {
+            subject_record["subject_id"]
+            for result in results.values()
+            for subject_record in result.get("subject_records", [])
+        }
+    )
+    for classifier_name in classifier_names:
+        subject_metric_map = {
+            record["subject_id"]: record[metric]
+            for record in results[classifier_name].get("subject_records", [])
+        }
+        axis.plot(
+            subject_ids,
+            [subject_metric_map[subject_id] for subject_id in subject_ids],
+            marker="o",
+            linewidth=1.2,
+            markersize=4,
+            label=CLASSIFIER_DISPLAY_NAMES[classifier_name],
+        )
+    axis.set_xticks(subject_ids)
+    axis.set_ylim(0, 1)
+    axis.set_xlabel("被试编号")
+    axis.set_ylabel(metric.replace("_", " ").title())
+    axis.set_title(title)
+    axis.grid(alpha=0.25)
+    axis.legend()
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(output_path, dpi=160)
@@ -339,11 +398,56 @@ def write_markdown_report(
                     "",
                 ]
             )
+        lines.extend(
+            [
+                "### 被试级结果",
+                "",
+                "| 被试 | 模型 | Accuracy | Balanced Accuracy | Macro F1 |",
+                "|---|---|---:|---:|---:|",
+            ]
+        )
+        for subject_summary in task_report["subject_summary_records"]:
+            lines.append(
+                "| "
+                f"{subject_summary['subject_id']} | "
+                f"{CLASSIFIER_DISPLAY_NAMES[subject_summary['classifier']]} | "
+                f"{subject_summary['accuracy']:.4f} | "
+                f"{subject_summary['balanced_accuracy']:.4f} | "
+                f"{subject_summary['macro_f1']:.4f} |"
+            )
+        lines.extend(
+            [
+                "",
+                "### 被试级 Balanced Accuracy 对比",
+                "",
+                f"![被试级结果对比]({task_report['subject_metric_figure']})",
+                "",
+            ]
+        )
+        for classifier_name, figure_map in task_report[
+            "subject_confusion_figures"
+        ].items():
+            lines.extend(
+                [
+                    f"#### {CLASSIFIER_DISPLAY_NAMES[classifier_name]} 各被试归一化混淆矩阵",
+                    "",
+                ]
+            )
+            for subject_id, figure_path in figure_map.items():
+                lines.extend(
+                    [
+                        f"被试 {subject_id}",
+                        "",
+                        f"![subject_{subject_id}_{classifier_name}]({figure_path})",
+                        "",
+                    ]
+                )
     lines.extend(
         [
             "## 结果说明",
             "",
             "- 本报告中的指标均来自交叉验证的折外预测。",
+            "- 除总体结果外，报告额外给出每个被试的单独汇总指标与混淆矩阵。",
             "- 结果用于第一组经典机器学习分析，不包含深度学习模型。",
             "- 时间窗并非数据说明给出的提示区间，而是当前实验配置。",
             "",
